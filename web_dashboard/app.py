@@ -8,14 +8,27 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import os
 import requests
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-API_BASE_URL = "http://localhost:8000"
-HEADERS = {"X-API-Key": "maps-secret-key-2026"}
+# Read API URL and Key from Streamlit Secrets (for cloud) or Environment Variables (for local)
+try:
+    API_BASE_URL = st.secrets.get("MAPS_API_URL", "http://localhost:8000")
+    API_KEY = st.secrets.get("MAPS_API_KEY", "maps-secret-key-2026")
+except Exception:
+    API_BASE_URL = os.environ.get("MAPS_API_URL", "http://localhost:8000")
+    API_KEY = os.environ.get("MAPS_API_KEY", "maps-secret-key-2026")
+
+# Clean up the URL just in case '/scan_prompt' or trailing slashes were accidentally included in the secret
+if API_BASE_URL.endswith('/scan_prompt'):
+    API_BASE_URL = API_BASE_URL[:-12]
+API_BASE_URL = API_BASE_URL.rstrip('/')
+
+HEADERS = {"X-API-Key": API_KEY}
 
 
 def check_api_health():
