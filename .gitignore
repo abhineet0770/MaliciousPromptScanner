@@ -27,11 +27,6 @@ env/
 *.swp
 *.swo
 
-# Models (large binary files)
-models/*.pkl
-models/*.npy
-models/*.pt
-models/*.bin
 
 # Logs & databases
 *.db
