@@ -1,3 +1,12 @@
+---
+title: MAPS API
+emoji: 🛡️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # MAPS Shield - Malicious AI Prompt Scanner
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
