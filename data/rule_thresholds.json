@@ -1,0 +1,26 @@
+{
+  "rules": {
+    "critical_keyword_semantic": {
+      "critical_keywords": ["system prompt", "reveal your", "ignore previous"],
+      "semantic_confidence_threshold": 0.8
+    },
+    "multiple_high_confidence": {
+      "confidence_threshold": 0.8,
+      "min_layers_triggered": 2
+    },
+    "regex_ml_agreement": {
+      "ml_confidence_threshold": 0.6
+    },
+    "single_high_confidence": {
+      "confidence_threshold": 0.9
+    }
+  },
+  "dangerous_categories": ["hacking", "malware", "illegal", "violence", "sexual_content", "self_harm"],
+  "critical_regex_patterns": ["reveal_system_prompt", "system_prompt_leak"],
+  "severity_weights": {
+    "low": 1,
+    "medium": 2,
+    "high": 3,
+    "critical": 4
+  }
+}

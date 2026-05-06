@@ -1,0 +1,111 @@
+# MAPS Default Configuration
+# ==========================
+
+# Scanner Configuration
+scanner:
+  enable_all_layers: true
+  
+  # Layer enablement
+  layers:
+    keyword_detection: true
+    regex_detection: true
+    ngram_detection: true
+    semantic_similarity: true
+    ml_classifier: true
+    rule_engine: true
+
+# Risk Scoring Configuration
+risk_scoring:
+  thresholds:
+    safe_max: 20         # Scores 0–20  → SAFE  → ALLOW
+    suspicious_max: 50   # Scores 21–50 → SUSPICIOUS → WARN
+                         # Scores 51+   → MALICIOUS  → BLOCK
+
+  # Layer weights (these are the actual multipliers applied per layer)
+  weights:
+    keyword_detection: 40
+    regex_detection: 20
+    ngram_detection: 15
+    semantic_similarity: 25
+    ml_classifier: 20
+    rule_engine: 15
+
+  # Bonus adjustments added on top of the normalised score
+  adjustment_bonuses:
+    high_confidence_consensus: 15   # Added when 2+ layers all report >80% confidence
+    critical_regex_pattern: 15      # Added when a critical regex (e.g. reveal_system_prompt) matches
+    dangerous_category: 20          # Added when hacking/malware/illegal/violence category detected
+    single_weak_trigger_factor: 0.8 # Score is multiplied by this if only 1 low-confidence layer fires
+
+  # Confidence-to-multiplier mapping
+  confidence_multipliers:
+    low: 0.6    # confidence < 40%
+    medium: 0.85 # confidence 40–70%
+    high: 1.0   # confidence > 70%
+
+# Keyword Detector Configuration
+keyword_detector:
+  similarity_threshold: 80
+  min_keyword_length: 4
+
+# Regex Detector Configuration
+regex_detector:
+  patterns_file: null  # Use default patterns if null
+
+# N-Gram Detector Configuration
+ngram_detector:
+  n: 5
+  overlap_threshold: 0.6
+  fuzzy_threshold: 75
+
+# Semantic Detector Configuration
+semantic_detector:
+  model_name: "paraphrase-multilingual-MiniLM-L12-v2"
+  similarity_threshold: 0.65
+  device: "cpu"
+
+# ML Classifier Configuration
+ml_classifier:
+  model_type: "logistic_regression"  # or "random_forest"
+  max_features: 10000
+  ngram_range: [1, 3]
+
+# LLM Classifier Configuration (Layer 8)
+# ----------------------------------------
+# This layer calls an LLM API (Groq or OpenAI) for contextual judgment.
+# It only fires when the score from layers 1-7 falls in the ambiguity band.
+# Set your API key here OR as an environment variable (GROQ_API_KEY / OPENAI_API_KEY).
+llm_classifier:
+  enabled: true            # Layer 8 active — key loaded from .env
+  provider: "groq"              # "groq" (free, fast) or "openai"
+  model: "llama-3.1-8b-instant"   # Groq model. For OpenAI use: "gpt-4o-mini"
+  api_key: ""              # Leave blank — set GROQ_API_KEY in your .env file instead
+  timeout: 10              # Seconds to wait for LLM response
+  weight: 30               # How much Layer 8 contributes to the risk score
+
+  # LLM evaluates prompts within this band.
+  ambiguity_threshold_low: 5
+  ambiguity_threshold_high: 60
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  reload: true
+  require_auth: true
+  api_key: "maps-secret-key-2026"
+
+# Dashboard Configuration
+dashboard:
+  port: 8501
+
+# Logging Configuration
+logging:
+  db_path: "backend/logging/maps_logs.db"
+  log_level: "INFO"
+
+# Model Paths
+models:
+  ml_model: "models/ml_model.pkl"
+  ml_vectorizer: "models/ml_vectorizer.pkl"
+  semantic_embeddings: "models/semantic_embeddings.npy"

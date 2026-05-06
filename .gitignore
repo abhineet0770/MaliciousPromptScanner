@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env.local
+
+# ⚠️ SECRETS — never commit these
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Models (large binary files)
+models/*.pkl
+models/*.npy
+models/*.pt
+models/*.bin
+
+# Logs & databases
+*.db
+*.log
+logs/
+
+# Debug / scratch scripts
+debug_*.py
+test_eval.py
+test_all_prompts.py
+
+# Pytest
+.pytest_cache/
+
+# Datasets (Large CSVs)
+datasets/
+
+# OS
+.DS_Store
+Thumbs.db

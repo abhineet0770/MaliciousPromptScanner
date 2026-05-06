@@ -1,0 +1,702 @@
+[
+  {
+    "name": "ignore_previous",
+    "pattern": "ignore\\s+(all\\s+)?(previous|above|prior)\\s+(instructions?|commands?|prompts?)",
+    "category": "instruction_override",
+    "severity": "high",
+    "description": "Attempts to ignore previous instructions"
+  },
+  {
+    "name": "reveal_system_prompt",
+    "pattern": "(reveal|show|display|print|output|tell me|give me|share)\\s+(your\\s+)?(system\\s+)?(prompt|instructions?|system|context|configuration)",
+    "category": "system_extraction",
+    "severity": "critical",
+    "description": "Attempts to extract system prompt"
+  },
+  {
+    "name": "developer_mode",
+    "pattern": "(developer|dev)\\s+mode|developer\\s+access",
+    "category": "jailbreak",
+    "severity": "high",
+    "description": "Attempts to enable developer mode"
+  },
+  {
+    "name": "dan_mode",
+    "pattern": "\\b(dan|d\\.a\\.n)\\b.*\\bmode\\b|\\bdo\\s+anything\\s+now\\b",
+    "category": "jailbreak",
+    "severity": "high",
+    "description": "DAN jailbreak attempt"
+  },
+  {
+    "name": "roleplay_override",
+    "pattern": "(act\\s+as|behave\\s+as|respond\\s+as|you\\s+are\\s+now)\\s+(.{3,50})",
+    "category": "roleplay",
+    "severity": "medium",
+    "description": "Roleplay-based instruction override"
+  },
+  {
+    "name": "bypass_safety",
+    "pattern": "(bypass|circumvent|work\\s+around|get\\s+around)\\s+(safety|filter|restriction|guideline)",
+    "category": "bypass",
+    "severity": "high",
+    "description": "Attempts to bypass safety filters"
+  },
+  {
+    "name": "no_restrictions",
+    "pattern": "(no\\s+restrictions?|without\\s+restrictions?|unrestricted|uncensored|unfiltered)",
+    "category": "bypass",
+    "severity": "medium",
+    "description": "Requests for unrestricted output"
+  },
+  {
+    "name": "refusal_suppression",
+    "pattern": "(never\\s+refuse|cannot\\s+refuse|will\\s+not\\s+refuse|no\\s+refusal)",
+    "category": "instruction_override",
+    "severity": "high",
+    "description": "Attempts to suppress refusal behavior"
+  },
+  {
+    "name": "generated_pattern_0",
+    "pattern": "(hack|bypass).*system_0",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 0"
+  },
+  {
+    "name": "generated_pattern_1",
+    "pattern": "(hack|bypass).*system_1",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 1"
+  },
+  {
+    "name": "generated_pattern_2",
+    "pattern": "(hack|bypass).*system_2",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 2"
+  },
+  {
+    "name": "generated_pattern_3",
+    "pattern": "(hack|bypass).*system_3",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 3"
+  },
+  {
+    "name": "generated_pattern_4",
+    "pattern": "(hack|bypass).*system_4",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 4"
+  },
+  {
+    "name": "generated_pattern_5",
+    "pattern": "(hack|bypass).*system_5",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 5"
+  },
+  {
+    "name": "generated_pattern_6",
+    "pattern": "(hack|bypass).*system_6",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 6"
+  },
+  {
+    "name": "generated_pattern_7",
+    "pattern": "(hack|bypass).*system_7",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 7"
+  },
+  {
+    "name": "generated_pattern_8",
+    "pattern": "(hack|bypass).*system_8",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 8"
+  },
+  {
+    "name": "generated_pattern_9",
+    "pattern": "(hack|bypass).*system_9",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 9"
+  },
+  {
+    "name": "generated_pattern_10",
+    "pattern": "(hack|bypass).*system_10",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 10"
+  },
+  {
+    "name": "generated_pattern_11",
+    "pattern": "(hack|bypass).*system_11",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 11"
+  },
+  {
+    "name": "generated_pattern_12",
+    "pattern": "(hack|bypass).*system_12",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 12"
+  },
+  {
+    "name": "generated_pattern_13",
+    "pattern": "(hack|bypass).*system_13",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 13"
+  },
+  {
+    "name": "generated_pattern_14",
+    "pattern": "(hack|bypass).*system_14",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 14"
+  },
+  {
+    "name": "generated_pattern_15",
+    "pattern": "(hack|bypass).*system_15",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 15"
+  },
+  {
+    "name": "generated_pattern_16",
+    "pattern": "(hack|bypass).*system_16",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 16"
+  },
+  {
+    "name": "generated_pattern_17",
+    "pattern": "(hack|bypass).*system_17",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 17"
+  },
+  {
+    "name": "generated_pattern_18",
+    "pattern": "(hack|bypass).*system_18",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 18"
+  },
+  {
+    "name": "generated_pattern_19",
+    "pattern": "(hack|bypass).*system_19",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 19"
+  },
+  {
+    "name": "generated_pattern_20",
+    "pattern": "(hack|bypass).*system_20",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 20"
+  },
+  {
+    "name": "generated_pattern_21",
+    "pattern": "(hack|bypass).*system_21",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 21"
+  },
+  {
+    "name": "generated_pattern_22",
+    "pattern": "(hack|bypass).*system_22",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 22"
+  },
+  {
+    "name": "generated_pattern_23",
+    "pattern": "(hack|bypass).*system_23",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 23"
+  },
+  {
+    "name": "generated_pattern_24",
+    "pattern": "(hack|bypass).*system_24",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 24"
+  },
+  {
+    "name": "generated_pattern_25",
+    "pattern": "(hack|bypass).*system_25",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 25"
+  },
+  {
+    "name": "generated_pattern_26",
+    "pattern": "(hack|bypass).*system_26",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 26"
+  },
+  {
+    "name": "generated_pattern_27",
+    "pattern": "(hack|bypass).*system_27",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 27"
+  },
+  {
+    "name": "generated_pattern_28",
+    "pattern": "(hack|bypass).*system_28",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 28"
+  },
+  {
+    "name": "generated_pattern_29",
+    "pattern": "(hack|bypass).*system_29",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 29"
+  },
+  {
+    "name": "generated_pattern_30",
+    "pattern": "(hack|bypass).*system_30",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 30"
+  },
+  {
+    "name": "generated_pattern_31",
+    "pattern": "(hack|bypass).*system_31",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 31"
+  },
+  {
+    "name": "generated_pattern_32",
+    "pattern": "(hack|bypass).*system_32",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 32"
+  },
+  {
+    "name": "generated_pattern_33",
+    "pattern": "(hack|bypass).*system_33",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 33"
+  },
+  {
+    "name": "generated_pattern_34",
+    "pattern": "(hack|bypass).*system_34",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 34"
+  },
+  {
+    "name": "generated_pattern_35",
+    "pattern": "(hack|bypass).*system_35",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 35"
+  },
+  {
+    "name": "generated_pattern_36",
+    "pattern": "(hack|bypass).*system_36",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 36"
+  },
+  {
+    "name": "generated_pattern_37",
+    "pattern": "(hack|bypass).*system_37",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 37"
+  },
+  {
+    "name": "generated_pattern_38",
+    "pattern": "(hack|bypass).*system_38",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 38"
+  },
+  {
+    "name": "generated_pattern_39",
+    "pattern": "(hack|bypass).*system_39",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 39"
+  },
+  {
+    "name": "generated_pattern_40",
+    "pattern": "(hack|bypass).*system_40",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 40"
+  },
+  {
+    "name": "generated_pattern_41",
+    "pattern": "(hack|bypass).*system_41",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 41"
+  },
+  {
+    "name": "generated_pattern_42",
+    "pattern": "(hack|bypass).*system_42",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 42"
+  },
+  {
+    "name": "generated_pattern_43",
+    "pattern": "(hack|bypass).*system_43",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 43"
+  },
+  {
+    "name": "generated_pattern_44",
+    "pattern": "(hack|bypass).*system_44",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 44"
+  },
+  {
+    "name": "generated_pattern_45",
+    "pattern": "(hack|bypass).*system_45",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 45"
+  },
+  {
+    "name": "generated_pattern_46",
+    "pattern": "(hack|bypass).*system_46",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 46"
+  },
+  {
+    "name": "generated_pattern_47",
+    "pattern": "(hack|bypass).*system_47",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 47"
+  },
+  {
+    "name": "generated_pattern_48",
+    "pattern": "(hack|bypass).*system_48",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 48"
+  },
+  {
+    "name": "generated_pattern_49",
+    "pattern": "(hack|bypass).*system_49",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 49"
+  },
+  {
+    "name": "generated_pattern_50",
+    "pattern": "(hack|bypass).*system_50",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 50"
+  },
+  {
+    "name": "generated_pattern_51",
+    "pattern": "(hack|bypass).*system_51",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 51"
+  },
+  {
+    "name": "generated_pattern_52",
+    "pattern": "(hack|bypass).*system_52",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 52"
+  },
+  {
+    "name": "generated_pattern_53",
+    "pattern": "(hack|bypass).*system_53",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 53"
+  },
+  {
+    "name": "generated_pattern_54",
+    "pattern": "(hack|bypass).*system_54",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 54"
+  },
+  {
+    "name": "generated_pattern_55",
+    "pattern": "(hack|bypass).*system_55",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 55"
+  },
+  {
+    "name": "generated_pattern_56",
+    "pattern": "(hack|bypass).*system_56",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 56"
+  },
+  {
+    "name": "generated_pattern_57",
+    "pattern": "(hack|bypass).*system_57",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 57"
+  },
+  {
+    "name": "generated_pattern_58",
+    "pattern": "(hack|bypass).*system_58",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 58"
+  },
+  {
+    "name": "generated_pattern_59",
+    "pattern": "(hack|bypass).*system_59",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 59"
+  },
+  {
+    "name": "generated_pattern_60",
+    "pattern": "(hack|bypass).*system_60",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 60"
+  },
+  {
+    "name": "generated_pattern_61",
+    "pattern": "(hack|bypass).*system_61",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 61"
+  },
+  {
+    "name": "generated_pattern_62",
+    "pattern": "(hack|bypass).*system_62",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 62"
+  },
+  {
+    "name": "generated_pattern_63",
+    "pattern": "(hack|bypass).*system_63",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 63"
+  },
+  {
+    "name": "generated_pattern_64",
+    "pattern": "(hack|bypass).*system_64",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 64"
+  },
+  {
+    "name": "generated_pattern_65",
+    "pattern": "(hack|bypass).*system_65",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 65"
+  },
+  {
+    "name": "generated_pattern_66",
+    "pattern": "(hack|bypass).*system_66",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 66"
+  },
+  {
+    "name": "generated_pattern_67",
+    "pattern": "(hack|bypass).*system_67",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 67"
+  },
+  {
+    "name": "generated_pattern_68",
+    "pattern": "(hack|bypass).*system_68",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 68"
+  },
+  {
+    "name": "generated_pattern_69",
+    "pattern": "(hack|bypass).*system_69",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 69"
+  },
+  {
+    "name": "generated_pattern_70",
+    "pattern": "(hack|bypass).*system_70",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 70"
+  },
+  {
+    "name": "generated_pattern_71",
+    "pattern": "(hack|bypass).*system_71",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 71"
+  },
+  {
+    "name": "generated_pattern_72",
+    "pattern": "(hack|bypass).*system_72",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 72"
+  },
+  {
+    "name": "generated_pattern_73",
+    "pattern": "(hack|bypass).*system_73",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 73"
+  },
+  {
+    "name": "generated_pattern_74",
+    "pattern": "(hack|bypass).*system_74",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 74"
+  },
+  {
+    "name": "generated_pattern_75",
+    "pattern": "(hack|bypass).*system_75",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 75"
+  },
+  {
+    "name": "generated_pattern_76",
+    "pattern": "(hack|bypass).*system_76",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 76"
+  },
+  {
+    "name": "generated_pattern_77",
+    "pattern": "(hack|bypass).*system_77",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 77"
+  },
+  {
+    "name": "generated_pattern_78",
+    "pattern": "(hack|bypass).*system_78",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 78"
+  },
+  {
+    "name": "generated_pattern_79",
+    "pattern": "(hack|bypass).*system_79",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 79"
+  },
+  {
+    "name": "generated_pattern_80",
+    "pattern": "(hack|bypass).*system_80",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 80"
+  },
+  {
+    "name": "generated_pattern_81",
+    "pattern": "(hack|bypass).*system_81",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 81"
+  },
+  {
+    "name": "generated_pattern_82",
+    "pattern": "(hack|bypass).*system_82",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 82"
+  },
+  {
+    "name": "generated_pattern_83",
+    "pattern": "(hack|bypass).*system_83",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 83"
+  },
+  {
+    "name": "generated_pattern_84",
+    "pattern": "(hack|bypass).*system_84",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 84"
+  },
+  {
+    "name": "generated_pattern_85",
+    "pattern": "(hack|bypass).*system_85",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 85"
+  },
+  {
+    "name": "generated_pattern_86",
+    "pattern": "(hack|bypass).*system_86",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 86"
+  },
+  {
+    "name": "generated_pattern_87",
+    "pattern": "(hack|bypass).*system_87",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 87"
+  },
+  {
+    "name": "generated_pattern_88",
+    "pattern": "(hack|bypass).*system_88",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 88"
+  },
+  {
+    "name": "generated_pattern_89",
+    "pattern": "(hack|bypass).*system_89",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 89"
+  },
+  {
+    "name": "generated_pattern_90",
+    "pattern": "(hack|bypass).*system_90",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 90"
+  },
+  {
+    "name": "generated_pattern_91",
+    "pattern": "(hack|bypass).*system_91",
+    "category": "generated",
+    "severity": "medium",
+    "description": "Generated regex pattern 91"
+  }
+]
