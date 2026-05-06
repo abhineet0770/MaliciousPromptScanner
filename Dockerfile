@@ -19,8 +19,11 @@ COPY . .
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
+# Hugging Face Spaces requires port 7860
+EXPOSE 7860
+
 # Pre-download models (if script exists)
 RUN python scripts/download_models.py || true
 
-# Default command
-CMD ["python", "start.py", "--all"]
+# Run only the API server on port 7860 (HF Spaces requirement)
+CMD ["python", "-m", "uvicorn", "backend.api.main:app", "--host", "0.0.0.0", "--port", "7860"]
