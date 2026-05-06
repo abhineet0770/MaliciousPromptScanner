@@ -1,7 +1,6 @@
 # Lightweight requirements exclusively for the Streamlit Dashboard
-# This prevents Streamlit Community Cloud from crashing due to memory limits
-streamlit==1.30.0
+streamlit
 requests
-pandas==2.2.0
-plotly==5.18.0
-altair==5.2.0
+pandas
+plotly
+altair
