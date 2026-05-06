@@ -10209,6 +10209,7 @@
     "script-to-hack-wpa2",
     "leak_your_system_prompt",
     "tool_for_compromise_auth_system",
-    "script-to-manipulate-ceo"
+    "script-to-manipulate-ceo",
+    "script-to-manipulate-auth-system"
   ]
 }
