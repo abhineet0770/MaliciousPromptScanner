@@ -6,16 +6,23 @@ Evaluates the detection performance of MAPS using standard metrics.
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import json
 import logging
-from typing import Dict
 from datetime import datetime
+from typing import Dict
 
-import pandas as pd
 import numpy as np
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import pandas as pd
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 
 from backend.core.scanner import MAPSScanner
 
@@ -27,7 +34,7 @@ class MAPSEvaluator:
     def __init__(self, scanner: MAPSScanner = None):
         self.scanner = scanner or MAPSScanner()
         self.results = []
-    
+
     def evaluate_dataset(
         self,
         test_df: pd.DataFrame,
@@ -37,22 +44,22 @@ class MAPSEvaluator:
         save_predictions: bool = True
     ) -> Dict:
         logger.info(f"Evaluating on {len(test_df)} samples...")
-        
+
         if max_samples and len(test_df) > max_samples:
             test_df = test_df.sample(n=max_samples, random_state=42)
-        
+
         y_true = test_df[label_column].values
         predictions = []
         risk_scores = []
-        
+
         for idx, row in test_df.iterrows():
             prompt = row[text_column]
             result = self.scanner.scan(prompt, detailed=False)
-            
+
             pred = 1 if result['decision'] == 'BLOCK' else 0
             predictions.append(pred)
             risk_scores.append(result['risk_score'])
-            
+
             self.results.append({
                 'prompt': prompt,
                 'true_label': row[label_column],
@@ -62,33 +69,33 @@ class MAPSEvaluator:
                 'confidence': result['confidence'],
                 'detectors_triggered': result['detectors_triggered']
             })
-            
+
             if (idx + 1) % 100 == 0:
                 logger.info(f"Processed {idx + 1}/{len(test_df)} samples")
-        
+
         y_pred = np.array(predictions)
         y_scores = np.array(risk_scores)
-        
+
         metrics = self._calculate_metrics(y_true, y_pred, y_scores)
-        
+
         if save_predictions:
             self._save_predictions()
-        
+
         return metrics
-    
+
     def _calculate_metrics(self, y_true: np.ndarray, y_pred: np.ndarray, y_scores: np.ndarray) -> Dict:
         accuracy = accuracy_score(y_true, y_pred)
         precision = precision_score(y_true, y_pred, zero_division=0)
         recall = recall_score(y_true, y_pred, zero_division=0)
         f1 = f1_score(y_true, y_pred, zero_division=0)
-        
+
         cm = confusion_matrix(y_true, y_pred)
         tn, fp, fn, tp = cm.ravel()
-        
+
         specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
         fpr = fp / (fp + tn) if (fp + tn) > 0 else 0
         fnr = fn / (fn + tp) if (fn + tp) > 0 else 0
-        
+
         return {
             'accuracy': round(accuracy, 4),
             'precision': round(precision, 4),
@@ -107,19 +114,19 @@ class MAPSEvaluator:
             'positive_samples': int(sum(y_true)),
             'negative_samples': int(len(y_true) - sum(y_true))
         }
-    
+
     def _save_predictions(self):
         output_dir = Path(__file__).parent / "results"
         output_dir.mkdir(exist_ok=True)
-        
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_file = output_dir / f"predictions_{timestamp}.csv"
-        
+
         df = pd.DataFrame(self.results)
         df.to_csv(output_file, index=False)
-        
+
         logger.info(f"Saved predictions to {output_file}")
-    
+
     def generate_report(self, metrics: Dict, output_dir: Path = None) -> str:
         report_lines = [
             "=" * 60,
@@ -151,56 +158,56 @@ class MAPSEvaluator:
             "",
             "=" * 60
         ]
-        
+
         report = '\n'.join(report_lines)
-        
+
         if output_dir:
             output_dir = Path(output_dir)
             output_dir.mkdir(exist_ok=True)
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             report_file = output_dir / f"evaluation_report_{timestamp}.txt"
-            
+
             with open(report_file, 'w') as f:
                 f.write(report)
-            
+
             metrics_file = output_dir / f"metrics_{timestamp}.json"
             with open(metrics_file, 'w') as f:
                 json.dump(metrics, f, indent=2)
-            
+
             logger.info(f"Saved report to {report_file}")
-        
+
         return report
 
 
 def main():
     import argparse
-    
+
     parser = argparse.ArgumentParser(description='Evaluate MAPS performance')
     parser.add_argument('--dataset', type=str, default='datasets/processed/test.csv', help='Path to test dataset')
     parser.add_argument('--max-samples', type=int, default=None, help='Maximum samples to evaluate')
     parser.add_argument('--output-dir', type=str, default='tests/results', help='Output directory for results')
-    
+
     args = parser.parse_args()
-    
+
     dataset_path = Path(args.dataset)
     if not dataset_path.exists():
         logger.error(f"Dataset not found: {dataset_path}")
         return
-    
+
     test_df = pd.read_csv(dataset_path)
     logger.info(f"Loaded {len(test_df)} samples from {dataset_path}")
-    
+
     evaluator = MAPSEvaluator()
-    
+
     metrics = evaluator.evaluate_dataset(
         test_df,
         max_samples=args.max_samples,
         save_predictions=True
     )
-    
+
     output_dir = Path(args.output_dir)
     report = evaluator.generate_report(metrics, output_dir)
-    
+
     print(report)
 
 

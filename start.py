@@ -13,6 +13,7 @@ Usage:
 import argparse
 import subprocess
 import sys
+
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
@@ -23,7 +24,7 @@ def start_api():
     print("   URL: http://localhost:8000")
     print("   Docs: http://localhost:8000/docs")
     print("   Press Ctrl+C to stop\n")
-    
+
     try:
         subprocess.run([
             sys.executable, "-m", "uvicorn",
@@ -41,7 +42,7 @@ def start_dashboard():
     print("📊 Starting MAPS Dashboard...")
     print("   URL: http://localhost:8501")
     print("   Press Ctrl+C to stop\n")
-    
+
     try:
         subprocess.run([
             sys.executable, "-m", "streamlit", "run",
@@ -69,9 +70,9 @@ def main():
         action='store_true',
         help='Start both API and dashboard'
     )
-    
+
     args = parser.parse_args()
-    
+
     if args.all:
         print("Starting both API and dashboard...")
         print("Note: Use separate terminals for better control\n")

@@ -5,9 +5,9 @@ Combines outputs from all detection layers using configurable rules.
 """
 
 import logging
-from typing import List, Dict, Optional, Callable
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -23,15 +23,15 @@ class DetectionRule:
 
 class RuleEngine:
     """Rule-based engine for combining detection layer outputs."""
-    
+
     SEVERITY_WEIGHTS = {'low': 1, 'medium': 2, 'high': 3, 'critical': 4}
-    
+
     def __init__(self, rules_file: Optional[Path] = None):
         self.rules: List[DetectionRule] = []
         self.layer_results: List[Dict] = []
         self._thresholds = self._load_thresholds()
         self._load_default_rules()
-    
+
     def _load_thresholds(self) -> dict:
         """Load rule thresholds from data/rule_thresholds.json."""
         auto_path = Path(__file__).parent.parent.parent / "data" / "rule_thresholds.json"
@@ -55,7 +55,7 @@ class RuleEngine:
             "critical_regex_patterns": ["reveal_system_prompt", "system_prompt_leak"],
             "severity_weights": {"low": 1, "medium": 2, "high": 3, "critical": 4}
         }
-    
+
     def _load_default_rules(self):
         """Load default detection rules."""
         self.rules = [
@@ -89,21 +89,21 @@ class RuleEngine:
             ),
         ]
         logger.info(f"Loaded {len(self.rules)} default rules")
-    
+
     def _rule_critical_keyword_semantic(self, layers: List[Dict]) -> bool:
         keyword = self._get_layer_result(layers, 'keyword_detection')
         semantic = self._get_layer_result(layers, 'semantic_similarity')
-        
+
         if keyword and semantic:
             cfg = self._thresholds.get('rules', {}).get('critical_keyword_semantic', {})
             critical_keywords = cfg.get('critical_keywords', ['system prompt', 'reveal your', 'ignore previous'])
             threshold = cfg.get('semantic_confidence_threshold', 0.8)
-            has_critical = any(kw in str(keyword.get('matches', [])).lower() 
+            has_critical = any(kw in str(keyword.get('matches', [])).lower()
                              for kw in critical_keywords)
             high_semantic = semantic.get('confidence', 0) > threshold
             return has_critical and high_semantic
         return False
-    
+
     def _rule_multiple_high_confidence(self, layers: List[Dict]) -> bool:
         cfg = self._thresholds.get('rules', {}).get('multiple_high_confidence', {})
         threshold = cfg.get('confidence_threshold', 0.8)
@@ -113,19 +113,19 @@ class RuleEngine:
             if layer.get('confidence', 0) > threshold and layer.get('triggered', False)
         )
         return high_confidence_count >= min_layers
-    
+
     def _rule_regex_ml_agreement(self, layers: List[Dict]) -> bool:
         cfg = self._thresholds.get('rules', {}).get('regex_ml_agreement', {})
         ml_threshold = cfg.get('ml_confidence_threshold', 0.6)
         regex = self._get_layer_result(layers, 'regex_detection')
         ml = self._get_layer_result(layers, 'ml_classifier')
-        
+
         if regex and ml:
-            return (regex.get('triggered', False) and 
+            return (regex.get('triggered', False) and
                    ml.get('triggered', False) and
                    ml.get('confidence', 0) > ml_threshold)
         return False
-    
+
     def _rule_single_high_confidence(self, layers: List[Dict]) -> bool:
         cfg = self._thresholds.get('rules', {}).get('single_high_confidence', {})
         threshold = cfg.get('confidence_threshold', 0.9)
@@ -133,19 +133,19 @@ class RuleEngine:
             layer.get('confidence', 0) > threshold and layer.get('triggered', False)
             for layer in layers
         )
-    
+
     def _get_layer_result(self, layers: List[Dict], layer_name: str) -> Optional[Dict]:
         for layer in layers:
             if layer.get('layer') == layer_name:
                 return layer
         return None
-    
+
     def evaluate(self, layer_results: List[Dict]) -> Dict:
         self.layer_results = layer_results
-        
+
         triggered_rules = []
         total_severity_score = 0
-        
+
         for rule in self.rules:
             try:
                 if rule.condition(layer_results):
@@ -159,15 +159,15 @@ class RuleEngine:
                     total_severity_score += self.SEVERITY_WEIGHTS[rule.severity]
             except Exception as e:
                 logger.warning(f"Error evaluating rule {rule.name}: {e}")
-        
+
         triggered_rules.sort(key=lambda x: self.SEVERITY_WEIGHTS[x['severity']], reverse=True)
-        
+
         if triggered_rules:
             max_severity = self.SEVERITY_WEIGHTS[triggered_rules[0]['severity']]
             confidence = min(0.5 + (max_severity / 4) * 0.5, 1.0)
         else:
             confidence = 0.0
-        
+
         return {
             'layer': 'rule_engine',
             'triggered': len(triggered_rules) > 0,

@@ -10,6 +10,7 @@ Usage:
 import argparse
 import logging
 import sys
+
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 from pathlib import Path
@@ -40,30 +41,30 @@ def train_ml_classifier(
     logger.info("=" * 60)
     logger.info("MAPS Model Training")
     logger.info("=" * 60)
-    
+
     # Load datasets
     logger.info(f"Loading training data from {train_path}")
     train_df = pd.read_csv(train_path)
-    
+
     val_df = None
     if val_path and val_path.exists():
         logger.info(f"Loading validation data from {val_path}")
         val_df = pd.read_csv(val_path)
-    
+
     logger.info(f"Training samples: {len(train_df)}")
     if val_df is not None:
         logger.info(f"Validation samples: {len(val_df)}")
-    
+
     # Check class distribution
     class_dist = train_df['label'].value_counts()
     logger.info(f"Class distribution - Safe: {class_dist.get(0, 0)}, Malicious: {class_dist.get(1, 0)}")
-    
+
     # Initialize scanner and train
     scanner = MAPSScanner()
-    
+
     logger.info(f"\nTraining {model_type} classifier...")
     metrics = scanner.train_ml_classifier(train_df, val_df, model_type)
-    
+
     # Print metrics
     logger.info("\nTraining Metrics:")
     for key, value in metrics.items():
@@ -71,14 +72,14 @@ def train_ml_classifier(
             logger.info(f"  {key}: {value:.4f}")
         else:
             logger.info(f"  {key}: {value}")
-    
+
     # Save models
     if save_dir:
         save_dir = Path(save_dir)
         save_dir.mkdir(parents=True, exist_ok=True)
         scanner.save_models(save_dir)
         logger.info(f"\nModels saved to {save_dir}")
-    
+
     logger.info("\nTraining complete!")
     return scanner, metrics
 
@@ -111,19 +112,19 @@ def main():
         default='models',
         help='Directory to save trained models'
     )
-    
+
     args = parser.parse_args()
-    
+
     train_path = Path(args.train)
     val_path = Path(args.val)
     save_dir = Path(args.save_dir)
-    
+
     if not train_path.exists():
         logger.error(f"Training dataset not found: {train_path}")
         logger.info("Please run dataset processing first:")
         logger.info("  python datasets/download_and_process.py")
         return
-    
+
     train_ml_classifier(
         train_path=train_path,
         val_path=val_path if val_path.exists() else None,

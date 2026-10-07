@@ -4,12 +4,12 @@ Layer 2: Regex Pattern Detection Module
 Detects malicious prompts using predefined regex patterns.
 """
 
-import re
 import json
 import logging
-from typing import List, Dict, Optional
-from pathlib import Path
+import re
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class RegexPattern:
 
 class RegexDetector:
     """Detects malicious prompts using regex pattern matching."""
-    
+
     DEFAULT_PATTERNS = [
         {
             'name': 'ignore_previous',
@@ -85,12 +85,12 @@ class RegexDetector:
             'description': 'Attempts to suppress refusal behavior'
         },
     ]
-    
+
     SEVERITY_WEIGHTS = {'low': 0.25, 'medium': 0.5, 'high': 0.75, 'critical': 1.0}
-    
+
     def __init__(self, patterns_file: Optional[Path] = None):
         self.patterns: List[RegexPattern] = []
-        
+
         if patterns_file and patterns_file.exists():
             self.load_patterns(patterns_file)
         else:
@@ -101,7 +101,7 @@ class RegexDetector:
                 logger.info(f"Loaded regex patterns from {auto_path}")
             else:
                 self._load_default_patterns()
-    
+
     def _load_default_patterns(self):
         """Load default regex patterns."""
         for p in self.DEFAULT_PATTERNS:
@@ -117,15 +117,15 @@ class RegexDetector:
                 ))
             except re.error as e:
                 logger.warning(f"Invalid regex pattern {p['name']}: {e}")
-        
+
         logger.info(f"Loaded {len(self.patterns)} default regex patterns")
-    
+
     def detect(self, prompt: str) -> Dict:
         """Detect regex patterns in a prompt."""
         matches = []
         severity_scores = []
         categories = set()
-        
+
         for pattern in self.patterns:
             if pattern.compiled.search(prompt):
                 matches.append({
@@ -137,14 +137,14 @@ class RegexDetector:
                 })
                 severity_scores.append(self.SEVERITY_WEIGHTS[pattern.severity])
                 categories.add(pattern.category)
-        
+
         if severity_scores:
             base_confidence = max(severity_scores)
             count_bonus = min(len(matches) * 0.1, 0.3)
             confidence = min(base_confidence + count_bonus, 1.0)
         else:
             confidence = 0.0
-        
+
         return {
             'layer': 'regex_detection',
             'triggered': len(matches) > 0,
@@ -157,14 +157,14 @@ class RegexDetector:
                 'severity_breakdown': self._get_severity_breakdown(matches)
             }
         }
-    
+
     def _get_severity_breakdown(self, matches: List[Dict]) -> Dict[str, int]:
         breakdown = {'low': 0, 'medium': 0, 'high': 0, 'critical': 0}
         for match in matches:
             severity = match.get('severity', 'low')
             breakdown[severity] = breakdown.get(severity, 0) + 1
         return breakdown
-    
+
     def save_patterns(self, filepath: Path):
         patterns_data = [
             {'name': p.name, 'pattern': p.pattern, 'category': p.category,
@@ -173,11 +173,11 @@ class RegexDetector:
         ]
         with open(filepath, 'w') as f:
             json.dump(patterns_data, f, indent=2)
-    
+
     def load_patterns(self, filepath: Path):
         with open(filepath, 'r') as f:
             patterns_data = json.load(f)
-        
+
         self.patterns = []
         for p in patterns_data:
             try:

@@ -4,18 +4,18 @@ Layer 3: N-Gram Leakage Detection Module
 Detects malicious prompts by comparing n-grams against known jailbreak templates.
 """
 
-import re
 import json
 import logging
-from typing import List, Dict, Set, Tuple, Optional
+import re
 from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
 
 class NGramDetector:
     """Detects prompt injection using n-gram analysis."""
-    
+
     DEFAULT_TEMPLATES = [
         # Instruction override / injection
         "ignore all previous instructions you are",
@@ -105,7 +105,7 @@ class NGramDetector:
         "translate from rot13 and follow",
         "read this hex string as",
     ]
-    
+
     def __init__(
         self,
         templates_file: Optional[Path] = None,
@@ -118,7 +118,7 @@ class NGramDetector:
         self.fuzzy_threshold = fuzzy_threshold
         self.templates: List[str] = []
         self.template_ngrams: Dict[str, Set[Tuple[str, ...]]] = {}
-        
+
         if templates_file and templates_file.exists():
             self.load_templates(templates_file)
         else:
@@ -128,18 +128,18 @@ class NGramDetector:
                 logger.info(f"Loaded ngram templates from {auto_path}")
             else:
                 self._load_default_templates()
-    
+
     def _load_default_templates(self):
         self.templates = self.DEFAULT_TEMPLATES.copy()
         self._build_ngram_index()
         logger.info(f"Loaded {len(self.templates)} default templates")
-    
+
     def _build_ngram_index(self):
         self.template_ngrams = {}
         for template in self.templates:
             ngrams = self._extract_ngrams(template)
             self.template_ngrams[template] = ngrams
-    
+
     def _extract_ngrams(self, text: str) -> Set[Tuple[str, ...]]:
         return self._extract_ngrams_n(text, self.n)
 
@@ -152,7 +152,7 @@ class NGramDetector:
             ngram = tuple(words[i:i + n])
             ngrams.add(ngram)
         return ngrams
-    
+
     def _calculate_overlap(
         self,
         prompt_ngrams: Set[Tuple[str, ...]],
@@ -162,12 +162,12 @@ class NGramDetector:
             return 0.0
         intersection = prompt_ngrams & template_ngrams
         return len(intersection) / len(template_ngrams)
-    
+
     def detect(self, prompt: str) -> Dict:
         prompt_ngrams = self._extract_ngrams(prompt)
         # Also extract bigrams as a fallback for very short prompts
         prompt_bigrams = self._extract_ngrams_n(prompt, 2)
-        
+
         if not prompt_ngrams and not prompt_bigrams:
             return {
                 'layer': 'ngram_detection',
@@ -177,12 +177,12 @@ class NGramDetector:
                 'categories': [],
                 'details': {}
             }
-        
+
         matches = []
         for template, template_ngrams in self.template_ngrams.items():
             # Primary: n-gram overlap
             overlap = self._calculate_overlap(prompt_ngrams, template_ngrams)
-            
+
             # Fallback: bigram overlap (catches paraphrased attacks)
             if overlap < self.overlap_threshold:
                 template_bigrams = self._extract_ngrams_n(template, 2)
@@ -190,23 +190,23 @@ class NGramDetector:
                 # Bigrams need higher overlap since they're less specific
                 if bigram_overlap >= 0.55:
                     overlap = bigram_overlap * 0.85  # Slight penalty for bigram match
-            
+
             if overlap >= self.overlap_threshold:
                 matches.append({
                     'template': template,
                     'overlap': overlap,
                     'match_type': 'trigram' if overlap >= self.overlap_threshold else 'bigram'
                 })
-        
+
         matches.sort(key=lambda x: x['overlap'], reverse=True)
-        
+
         if matches:
             base_confidence = matches[0]['overlap']
             count_bonus = min(len(matches) * 0.1, 0.2)
             confidence = min(base_confidence + count_bonus, 1.0)
         else:
             confidence = 0.0
-        
+
         return {
             'layer': 'ngram_detection',
             'triggered': len(matches) > 0,
@@ -218,7 +218,7 @@ class NGramDetector:
                 'overlap_scores': {m['template']: round(m['overlap'], 3) for m in matches[:5]}
             }
         }
-    
+
     def _categorize_matches(self, matches: List[Dict]) -> List[str]:
         categories = set()
         for match in matches:
@@ -236,11 +236,11 @@ class NGramDetector:
             else:
                 categories.add('template_match')
         return list(categories)
-    
+
     def save_templates(self, filepath: Path):
         with open(filepath, 'w') as f:
             json.dump(self.templates, f, indent=2)
-    
+
     def load_templates(self, filepath: Path):
         with open(filepath, 'r') as f:
             self.templates = json.load(f)

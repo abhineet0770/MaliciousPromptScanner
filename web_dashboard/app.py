@@ -6,14 +6,17 @@ Streamlit-based dashboard for visualizing scan results and analytics.
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import os
-import requests
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import requests
 import streamlit as st
+
 
 def _load_dotenv():
     """Load .env from project root if it exists."""
@@ -235,36 +238,36 @@ def render_header():
 
 def render_scanner():
     st.header("Prompt Scanner")
-    
+
     prompt = st.text_area("Enter prompt to scan:", height=100, placeholder="Type or paste a prompt here...")
-    
+
     col1, col2 = st.columns([1, 4])
     with col1:
         scan_button = st.button("Scan Prompt", type="primary", use_container_width=True)
     with col2:
         detailed = st.checkbox("Show detailed results", value=False)
-    
+
     if scan_button and prompt:
         with st.spinner("Scanning prompt..."):
             result = scan_prompt(prompt, detailed)
-        
+
         if result:
             render_scan_result(result, detailed)
 
 
 def render_scan_result(result: dict, detailed: bool):
     st.markdown("<br>", unsafe_allow_html=True)
-    
+
     decision = result.get('decision', 'UNKNOWN')
     icon = "✅" if decision == "ALLOW" else "⚠️" if decision == "WARN" else "🚫"
-    
+
     st.markdown(f'<div class="verdict-badge {decision}">{icon} Decision: {decision}</div>', unsafe_allow_html=True)
-    
+
     c1, c2, c3, c4 = st.columns(4)
-    
+
     risk_score = result.get('risk_score', 0)
     score_class = "safe" if risk_score < 30 else "warn" if risk_score < 60 else "danger"
-    
+
     with c1:
         st.markdown(f'''
         <div class="metric-card" style="animation-delay: 0.1s;">
@@ -272,7 +275,7 @@ def render_scan_result(result: dict, detailed: bool):
             <div class="metric-value {score_class}">{risk_score}/100</div>
         </div>
         ''', unsafe_allow_html=True)
-        
+
     classification = result.get('classification', 'UNKNOWN')
     class_color = "safe" if classification == "SAFE" else "warn" if classification == "SUSPICIOUS" else "danger"
     with c2:
@@ -282,7 +285,7 @@ def render_scan_result(result: dict, detailed: bool):
             <div class="metric-value {class_color}">{classification}</div>
         </div>
         ''', unsafe_allow_html=True)
-        
+
     with c3:
         st.markdown(f'''
         <div class="metric-card" style="animation-delay: 0.3s;">
@@ -290,7 +293,7 @@ def render_scan_result(result: dict, detailed: bool):
             <div class="metric-value" style="color: #60a5fa;">{result.get('confidence', 0):.0%}</div>
         </div>
         ''', unsafe_allow_html=True)
-        
+
     with c4:
         st.markdown(f'''
         <div class="metric-card" style="animation-delay: 0.4s;">
@@ -298,17 +301,17 @@ def render_scan_result(result: dict, detailed: bool):
             <div class="metric-value" style="color: #94a3b8;">{result.get('scan_time_ms', 0):.0f}ms</div>
         </div>
         ''', unsafe_allow_html=True)
-    
+
     st.markdown("<br>", unsafe_allow_html=True)
-    
+
     st.info(f"📋 Reason: {result.get('reason', 'N/A')}")
-    
+
     detectors = result.get('detectors_triggered', [])
     if detectors:
         st.markdown("**Detectors Triggered:**")
         for detector in detectors:
             st.write(f"  - `{detector}`")
-    
+
     categories = result.get('categories', [])
     if categories:
         st.markdown(f"**Attack Categories:** `{'`, `'.join(categories)}`")
@@ -531,7 +534,7 @@ def render_statistics():
             st.metric("Blocked", by_decision.get('BLOCK', 0))
         with c4:
             st.metric("Warnings", by_decision.get('WARN', 0))
-        
+
         st.subheader("Classification Breakdown")
         by_classification = stats.get('by_classification', {})
         if by_classification:
@@ -548,7 +551,7 @@ def render_statistics():
                 font=dict(color='#cbd5e1', family='Inter')
             )
             st.plotly_chart(fig, use_container_width=True)
-        
+
         st.subheader("Top Detectors Triggered")
         top_detectors = stats.get('top_detectors', {})
         if top_detectors:
@@ -567,31 +570,31 @@ def render_statistics():
 
 def render_trends():
     st.header("Trends")
-    
+
     hours = st.select_slider("Trend Time Window", options=[6, 12, 24, 48, 72], value=24, format_func=lambda x: f"{x} hours", key="trend_hours")
-    
+
     trends_data = get_trends(hours)
-    
+
     if trends_data and trends_data.get('trends'):
         df = pd.DataFrame(trends_data['trends'])
-        
+
         for col in ['SAFE', 'SUSPICIOUS', 'MALICIOUS']:
             if col not in df.columns:
                 df[col] = 0
-        
+
         fig = go.Figure()
-        
+
         if 'SAFE' in df.columns:
             fig.add_trace(go.Scatter(x=df['hour'], y=df['SAFE'], name='SAFE', line=dict(color='#10b981'), fill='tonexty'))
         if 'SUSPICIOUS' in df.columns:
             fig.add_trace(go.Scatter(x=df['hour'], y=df['SUSPICIOUS'], name='SUSPICIOUS', line=dict(color='#f59e0b'), fill='tonexty'))
         if 'MALICIOUS' in df.columns:
             fig.add_trace(go.Scatter(x=df['hour'], y=df['MALICIOUS'], name='MALICIOUS', line=dict(color='#ef4444'), fill='tonexty'))
-        
+
         fig.update_layout(
-            title="Scan Trends Over Time", 
-            xaxis_title="Hour", 
-            yaxis_title="Number of Scans", 
+            title="Scan Trends Over Time",
+            xaxis_title="Hour",
+            yaxis_title="Number of Scans",
             hovermode='x unified',
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
@@ -604,20 +607,20 @@ def render_trends():
 
 def render_recent_scans():
     st.header("Recent Scans")
-    
+
     scans_data = get_recent_scans(limit=50)
-    
+
     if scans_data and scans_data.get('logs'):
         logs = scans_data['logs']
         df = pd.DataFrame(logs)
-        
+
         display_cols = ['timestamp', 'prompt', 'classification', 'risk_score', 'decision']
         available_cols = [c for c in display_cols if c in df.columns]
         df_display = df[available_cols].copy()
-        
+
         if 'prompt' in df_display.columns:
             df_display['prompt'] = df_display['prompt'].str[:80] + '...'
-        
+
         st.dataframe(df_display, use_container_width=True, hide_index=True)
     else:
         st.info("No recent scans available.")
@@ -625,12 +628,12 @@ def render_recent_scans():
 
 def render_status():
     st.header("System Status")
-    
+
     status = get_status()
-    
+
     if status:
         col1, col2 = st.columns(2)
-        
+
         with col1:
             st.subheader("Layer Status")
             enabled_layers = status.get('enabled_layers', {})
@@ -639,7 +642,7 @@ def render_status():
                     st.success(f"{layer}")
                 else:
                     st.error(f"{layer}")
-        
+
         with col2:
             st.subheader("Model Information")
             st.write(f"ML Model Type: {status.get('ml_model_type', 'N/A')}")
@@ -648,7 +651,7 @@ def render_status():
             st.write(f"Regex Patterns: {status.get('num_regex_patterns', 0)}")
             st.write(f"N-gram Templates: {status.get('num_ngram_templates', 0)}")
             st.write(f"Semantic Examples: {status.get('num_semantic_examples', 0)}")
-        
+
         st.subheader("Risk Thresholds")
         thresholds = status.get('risk_thresholds', {})
         st.write(f"Safe: 0-{thresholds.get('safe_max', 30)}")
@@ -661,21 +664,21 @@ def render_status():
 def main():
     st.set_page_config(page_title="MAPS Security", page_icon="🛡️", layout="wide", initial_sidebar_state="expanded")
     inject_custom_css()
-    
+
     st.sidebar.title("MAPS")
     st.sidebar.markdown("Malicious AI Prompt Scanner")
     st.sidebar.divider()
-    
+
     page = st.sidebar.radio("Navigation", ["Scanner", "Statistics", "Trends", "Recent Scans", "System Status"])
-    
+
     if not check_api_health():
         st.sidebar.error("API Offline")
         st.sidebar.info("Start the API with: python -m backend.api.main")
     else:
         st.sidebar.success("API Online")
-    
+
     render_header()
-    
+
     if page == "Scanner":
         render_scanner()
     elif page == "Statistics":
@@ -686,7 +689,7 @@ def main():
         render_recent_scans()
     elif page == "System Status":
         render_status()
-    
+
     st.sidebar.divider()
     st.sidebar.caption("MAPS v1.0.0 - AI Security")
 

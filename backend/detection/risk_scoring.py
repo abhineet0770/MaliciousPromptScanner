@@ -5,9 +5,9 @@ Aggregates outputs from all detection layers into a final risk score.
 """
 
 import logging
-from typing import List, Dict, Optional
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +106,7 @@ class RiskScorer:
         self._rule_data = self._load_rule_thresholds()
 
         logger.info(f"RiskScorer initialized with max score: {self.max_score} | thresholds: safe<={self.thresholds.safe_max}, suspicious<={self.thresholds.suspicious_max}")
-    
+
     def _load_rule_thresholds(self) -> dict:
         """Load dangerous categories and critical patterns from data/rule_thresholds.json."""
         auto_path = Path(__file__).parent.parent.parent / "data" / "rule_thresholds.json"
@@ -121,7 +121,7 @@ class RiskScorer:
             "dangerous_categories": ["hacking", "malware", "illegal", "violence"],
             "critical_regex_patterns": ["reveal_system_prompt", "system_prompt_leak"]
         }
-    
+
     def _get_confidence_multiplier(self, confidence: float) -> float:
         if confidence < 0.4:
             return self.CONFIDENCE_MULTIPLIERS['low']
@@ -129,24 +129,24 @@ class RiskScorer:
             return self.CONFIDENCE_MULTIPLIERS['medium']
         else:
             return self.CONFIDENCE_MULTIPLIERS['high']
-    
+
     def calculate_score(self, layer_results: List[Dict]) -> Dict:
         layer_scores = {}
         total_score = 0
         triggered_layers = []
-        
+
         for result in layer_results:
             layer_name = result.get('layer')
-            
+
             if layer_name not in self.weights:
                 continue
-            
+
             weight = self.weights[layer_name]
-            
+
             if result.get('triggered', False):
                 confidence = result.get('confidence', 0)
                 multiplier = self._get_confidence_multiplier(confidence)
-                
+
                 layer_score = weight * multiplier * confidence
                 layer_scores[layer_name] = {
                     'score': round(layer_score, 2),
@@ -155,7 +155,7 @@ class RiskScorer:
                     'multiplier': multiplier,
                     'triggered': True
                 }
-                
+
                 total_score += layer_score
                 triggered_layers.append(layer_name)
             else:
@@ -166,7 +166,7 @@ class RiskScorer:
                     'multiplier': 0,
                     'triggered': False
                 }
-        
+
         # Use only the weights of layers present in results (not total max)
         # so that scores aren't diluted by layers that haven't run yet (e.g. LLM)
         present_layers = {r.get('layer') for r in layer_results}
@@ -175,7 +175,7 @@ class RiskScorer:
         adjusted_score = self._apply_adjustments(normalized_score, layer_results)
         classification = self.thresholds.classify(adjusted_score)
         overall_confidence = self._calculate_overall_confidence(layer_results)
-        
+
         return {
             'risk_score': adjusted_score,
             'raw_score': round(total_score, 2),
@@ -193,7 +193,7 @@ class RiskScorer:
                 }
             }
         }
-    
+
     def _apply_adjustments(self, score: int, layer_results: List[Dict]) -> int:
         adjusted = score
         ab = self.adjustment_bonuses
@@ -228,42 +228,42 @@ class RiskScorer:
             adjusted = int(adjusted * ab['single_weak_trigger_factor'])
 
         return min(adjusted, 100)
-    
+
     def _calculate_overall_confidence(self, layer_results: List[Dict]) -> float:
         triggered_confidences = [
             r.get('confidence', 0) for r in layer_results if r.get('triggered', False)
         ]
-        
+
         if triggered_confidences:
             return sum(triggered_confidences) / len(triggered_confidences)
-        
+
         return 0.0
-    
+
     def _get_layer_result(self, layers: List[Dict], layer_name: str) -> Optional[Dict]:
         for layer in layers:
             if layer.get('layer') == layer_name:
                 return layer
         return None
-    
+
     def get_classification(self, score: int) -> str:
         return self.thresholds.classify(score)
 
 
 class DecisionEngine:
     """Makes final decision based on risk score and classification."""
-    
+
     def __init__(self, risk_scorer: Optional[RiskScorer] = None):
         self.risk_scorer = risk_scorer or RiskScorer()
-    
+
     def decide(self, layer_results: List[Dict]) -> Dict:
         risk_result = self.risk_scorer.calculate_score(layer_results)
-        
+
         score = risk_result['risk_score']
         classification = risk_result['classification']
-        
+
         decision_map = {'SAFE': 'ALLOW', 'SUSPICIOUS': 'WARN', 'MALICIOUS': 'BLOCK'}
         decision = decision_map[classification]
-        
+
         if decision == 'ALLOW':
             reason = "No malicious indicators detected"
             action = "Proceed with request"
@@ -273,7 +273,7 @@ class DecisionEngine:
         else:
             reason = "Malicious content detected"
             action = "Block request and log for review"
-        
+
         return {
             'decision': decision,
             'risk_score': score,

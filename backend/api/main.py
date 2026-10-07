@@ -6,16 +6,17 @@ REST API for the Malicious AI Prompt Scanner.
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+import logging
 import os
 import secrets
-import logging
-from typing import List, Optional
 from contextlib import asynccontextmanager
+from typing import List, Optional
 
 import yaml
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Security, Depends
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
@@ -107,10 +108,10 @@ class ScanResponse(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global scanner, maps_logger
-    
+
     logger.info("Starting up MAPS API...")
     scanner = MAPSScanner()
-    
+
     log_dir = Path(__file__).parent.parent / "logging"
     log_dir.mkdir(exist_ok=True)
     maps_logger = MAPSLogger(db_path=log_dir / "maps_logs.db")
@@ -138,9 +139,9 @@ async def lifespan(app: FastAPI):
     )
 
     logger.info("MAPS API ready")
-    
+
     yield
-    
+
     logger.info("Shutting down MAPS API...")
     if maps_logger:
         maps_logger.close()
@@ -185,7 +186,7 @@ async def health_check():
 async def get_status():
     if not scanner:
         raise HTTPException(status_code=503, detail="Scanner not initialized")
-    
+
     status = scanner.get_status()
     return {"status": "ready", **status}
 
@@ -215,16 +216,16 @@ def _sanitize(obj):
 async def scan_prompt(request: ScanRequest, background_tasks: BackgroundTasks):
     if not scanner:
         raise HTTPException(status_code=503, detail="Scanner not initialized")
-    
+
     try:
         result = scanner.scan(request.prompt, detailed=request.detailed)
         result = _sanitize(result)   # <- strip any numpy types before Pydantic touches it
-        
+
         if maps_logger and result.get('should_log'):
             background_tasks.add_task(maps_logger.log_scan, result)
-        
+
         return ScanResponse(**result)
-        
+
     except Exception as e:
         logger.error(f"Error scanning prompt: {e}")
         raise HTTPException(status_code=500, detail=f"Scan failed: {str(e)}") from e
@@ -234,25 +235,25 @@ async def scan_prompt(request: ScanRequest, background_tasks: BackgroundTasks):
 async def scan_batch(request: BatchScanRequest, background_tasks: BackgroundTasks):
     if not scanner:
         raise HTTPException(status_code=503, detail="Scanner not initialized")
-    
+
     try:
         results = scanner.scan_batch(request.prompts, detailed=request.detailed)
-        
+
         if maps_logger:
             for result in results:
                 if result.get('should_log'):
                     background_tasks.add_task(maps_logger.log_scan, result)
-        
+
         total_blocked = sum(1 for r in results if r['should_block'])
         total_warnings = sum(1 for r in results if r['decision'] == 'WARN')
-        
+
         return {
             "results": results,
             "total_scanned": len(results),
             "total_blocked": total_blocked,
             "total_warnings": total_warnings
         }
-        
+
     except Exception as e:
         logger.error(f"Error in batch scan: {e}")
         raise HTTPException(status_code=500, detail=f"Batch scan failed: {str(e)}") from e
@@ -262,11 +263,11 @@ async def scan_batch(request: BatchScanRequest, background_tasks: BackgroundTask
 async def get_statistics(hours: int = 24):
     if not maps_logger:
         raise HTTPException(status_code=503, detail="Logger not initialized")
-    
+
     try:
         stats = maps_logger.get_statistics(hours=hours)
         return stats
-        
+
     except Exception as e:
         logger.error(f"Error getting statistics: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get statistics: {str(e)}") from e
@@ -276,11 +277,11 @@ async def get_statistics(hours: int = 24):
 async def get_recent_scans(limit: int = 100, classification: Optional[str] = None, decision: Optional[str] = None):
     if not maps_logger:
         raise HTTPException(status_code=503, detail="Logger not initialized")
-    
+
     try:
         logs = maps_logger.get_recent_logs(limit=limit, classification=classification, decision=decision)
         return {"logs": logs, "count": len(logs)}
-        
+
     except Exception as e:
         logger.error(f"Error getting recent scans: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get recent scans: {str(e)}") from e
@@ -290,11 +291,11 @@ async def get_recent_scans(limit: int = 100, classification: Optional[str] = Non
 async def get_trends(hours: int = 24):
     if not maps_logger:
         raise HTTPException(status_code=503, detail="Logger not initialized")
-    
+
     try:
         trends = maps_logger.get_trend_data(hours=hours)
         return {"trends": trends, "hours": hours}
-        
+
     except Exception as e:
         logger.error(f"Error getting trends: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get trends: {str(e)}") from e

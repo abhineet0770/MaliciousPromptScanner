@@ -5,12 +5,12 @@ Multi-layer detection system for identifying malicious prompts.
 """
 
 from .keyword_detector import KeywordDetector
-from .regex_detector import RegexDetector
-from .ngram_detector import NGramDetector
-from .semantic_detector import SemanticDetector
 from .ml_classifier import MLClassifier
-from .rule_engine import RuleEngine
+from .ngram_detector import NGramDetector
+from .regex_detector import RegexDetector
 from .risk_scoring import RiskScorer
+from .rule_engine import RuleEngine
+from .semantic_detector import SemanticDetector
 
 __all__ = [
     'KeywordDetector',

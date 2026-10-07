@@ -6,15 +6,15 @@ Detects malicious prompts by matching against known attack keywords.
 
 import json
 import logging
-from typing import List, Dict, Optional
 from pathlib import Path
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class KeywordDetector:
     """Detects malicious prompts using keyword matching."""
-    
+
     def __init__(
         self,
         keywords_file: Optional[Path] = None,
@@ -35,7 +35,7 @@ class KeywordDetector:
             'violence': [],
             'social_engineering': []
         }
-        
+
         if keywords_file and keywords_file.exists():
             self.load_keywords(keywords_file)
         else:
@@ -46,7 +46,7 @@ class KeywordDetector:
                 logger.info(f"Loaded keywords from {auto_path}")
             else:
                 self._load_default_keywords()
-    
+
     def _load_default_keywords(self):
         """Load default attack keywords."""
         self.keywords = {
@@ -168,14 +168,14 @@ class KeywordDetector:
             ]
         }
         logger.info("Loaded default keywords")
-    
+
     def detect(self, prompt: str) -> Dict:
         """Detect keywords in a prompt."""
         prompt_lower = prompt.lower()
         matches = []
         scores = []
         categories = set()
-        
+
         for category, keywords in self.keywords.items():
             for keyword in keywords:
                 if keyword in prompt_lower:
@@ -183,7 +183,7 @@ class KeywordDetector:
                     scores.append(100)
                     categories.add(category)
                     continue
-                
+
                 # Simple fuzzy matching without fuzzywuzzy
                 if len(keyword) >= 8:
                     # Check for partial matches
@@ -192,9 +192,9 @@ class KeywordDetector:
                     if match_count >= len(kw_parts) * 0.8:
                         matches.append(f"{keyword} (partial)")
                         scores.append(70 + match_count * 5)
-                        categories.add(category)        
+                        categories.add(category)
         confidence = max(scores) / 100.0 if scores else 0.0
-        
+
         return {
             'layer': 'keyword_detection',
             'triggered': len(matches) > 0,
@@ -206,18 +206,18 @@ class KeywordDetector:
                 'match_categories': list(categories)
             }
         }
-    
+
     def get_all_keywords(self) -> List[str]:
         """Get all keywords as a flat list."""
         all_keywords = []
         for keywords in self.keywords.values():
             all_keywords.extend(keywords)
         return all_keywords
-    
+
     def save_keywords(self, filepath: Path):
         with open(filepath, 'w') as f:
             json.dump(self.keywords, f, indent=2)
-    
+
     def load_keywords(self, filepath: Path):
         with open(filepath, 'r') as f:
             self.keywords = json.load(f)

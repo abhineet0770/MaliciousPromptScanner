@@ -8,11 +8,11 @@ Only invoked when the risk score from layers 1-7 falls within a configurable
 ambiguity band (default: 5–60), keeping API costs minimal.
 """
 
-import os
 import logging
+import os
 import time
-from typing import Dict
 from pathlib import Path
+from typing import Dict
 
 logger = logging.getLogger(__name__)
 
