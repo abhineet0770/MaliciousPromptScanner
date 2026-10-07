@@ -51,7 +51,7 @@ def check_api_health():
     try:
         response = requests.get(f"{API_BASE_URL}/health", timeout=5)
         return response.status_code == 200
-    except:
+    except Exception:
         return False
 
 
@@ -73,7 +73,7 @@ def get_statistics(hours: int = 24):
     try:
         response = requests.get(f"{API_BASE_URL}/statistics", params={"hours": hours}, headers=HEADERS, timeout=10)
         return response.json() if response.status_code == 200 else None
-    except:
+    except Exception:
         return None
 
 
@@ -81,7 +81,7 @@ def get_recent_scans(limit: int = 100):
     try:
         response = requests.get(f"{API_BASE_URL}/recent_scans", params={"limit": limit}, headers=HEADERS, timeout=10)
         return response.json() if response.status_code == 200 else None
-    except:
+    except Exception:
         return None
 
 
@@ -89,7 +89,7 @@ def get_trends(hours: int = 24):
     try:
         response = requests.get(f"{API_BASE_URL}/trends", params={"hours": hours}, headers=HEADERS, timeout=10)
         return response.json() if response.status_code == 200 else None
-    except:
+    except Exception:
         return None
 
 
@@ -97,7 +97,7 @@ def get_status():
     try:
         response = requests.get(f"{API_BASE_URL}/status", headers=HEADERS, timeout=5)
         return response.json() if response.status_code == 200 else None
-    except:
+    except Exception:
         return None
 
 
