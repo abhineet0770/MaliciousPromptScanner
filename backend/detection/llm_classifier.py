@@ -11,7 +11,7 @@ ambiguity band (default: 15–60), keeping API costs minimal.
 import os
 import logging
 import time
-from typing import Dict, Optional
+from typing import Dict
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -136,7 +136,7 @@ class LLMClassifier:
         except ImportError as e:
             missing = "groq" if self.provider == "groq" else "openai"
             logger.warning(
-                f"LLM Classifier: '{missing}' package not installed. "
+                f"LLM Classifier: '{missing}' package not installed ({e}). "
                 f"Run: pip install {missing}"
             )
         except Exception as e:

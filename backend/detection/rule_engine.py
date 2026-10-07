@@ -4,7 +4,6 @@ Layer 6: Rule Engine Module
 Combines outputs from all detection layers using configurable rules.
 """
 
-import json
 import logging
 from typing import List, Dict, Optional, Callable
 from pathlib import Path

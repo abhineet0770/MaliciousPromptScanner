@@ -17,7 +17,6 @@ from pathlib import Path
 import pandas as pd
 
 from backend.core.scanner import MAPSScanner
-from backend.detection.ml_classifier import MLClassifier
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

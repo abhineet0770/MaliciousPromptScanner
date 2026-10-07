@@ -4,7 +4,6 @@ Layer 4: Semantic Similarity Detection Module
 Detects malicious prompts using semantic embeddings and similarity.
 """
 
-import json
 import logging
 from typing import List, Dict, Optional
 from pathlib import Path
@@ -115,7 +114,6 @@ class SemanticDetector:
     
     def _compute_attack_embeddings(self):
         if self.model:
-            import numpy as np
             logger.info(f"Computing embeddings for {len(self.attack_examples)} attack examples")
             self.attack_embeddings = self.model.encode(
                 self.attack_examples,

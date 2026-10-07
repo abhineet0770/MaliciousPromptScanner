@@ -4,7 +4,6 @@ Layer 7: Risk Scoring Module
 Aggregates outputs from all detection layers into a final risk score.
 """
 
-import json
 import logging
 from typing import List, Dict, Optional
 from pathlib import Path

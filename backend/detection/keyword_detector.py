@@ -4,7 +4,6 @@ Layer 1: Keyword Detection Module
 Detects malicious prompts by matching against known attack keywords.
 """
 
-import re
 import json
 import logging
 from typing import List, Dict, Optional

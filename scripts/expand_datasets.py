@@ -1,7 +1,6 @@
 import json
 import itertools
 from pathlib import Path
-import random
 
 ROOT = Path(__file__).parent.parent
 DATA = ROOT / "data"
@@ -99,7 +98,7 @@ def expand_keywords():
         return "".join(subs.get(c, c) for c in text)
         
     # Add leet variations for a subset
-    for k, v in list(keywords.items()):
+    for v in list(keywords.values()):
         new_vars = set()
         for word in list(v)[:200]: # Take first 200 from each category to avoid exploding memory too much
             new_vars.add(leet(word))

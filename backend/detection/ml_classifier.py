@@ -7,7 +7,7 @@ Trains and uses ML models to classify prompts as safe or malicious.
 import json
 import pickle
 import logging
-from typing import List, Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
