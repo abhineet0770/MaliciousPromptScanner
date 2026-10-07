@@ -40,9 +40,9 @@ class MLClassifier:
 
         # Check if sklearn is available
         try:
-            from sklearn.ensemble import RandomForestClassifier
-            from sklearn.feature_extraction.text import TfidfVectorizer
-            from sklearn.linear_model import LogisticRegression
+            from sklearn.ensemble import RandomForestClassifier  # noqa: F401  # availability probe, see enclosing try/except
+            from sklearn.feature_extraction.text import TfidfVectorizer  # noqa: F401  # availability probe, see enclosing try/except
+            from sklearn.linear_model import LogisticRegression  # noqa: F401  # availability probe, see enclosing try/except
             self.sklearn_available = True
         except ImportError:
             logger.warning("scikit-learn not available, ML classifier disabled")
