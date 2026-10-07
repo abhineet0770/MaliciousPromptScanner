@@ -227,7 +227,7 @@ async def scan_prompt(request: ScanRequest, background_tasks: BackgroundTasks):
         
     except Exception as e:
         logger.error(f"Error scanning prompt: {e}")
-        raise HTTPException(status_code=500, detail=f"Scan failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Scan failed: {str(e)}") from e
 
 
 @app.post("/scan_batch", dependencies=[Depends(verify_api_key)])
@@ -255,7 +255,7 @@ async def scan_batch(request: BatchScanRequest, background_tasks: BackgroundTask
         
     except Exception as e:
         logger.error(f"Error in batch scan: {e}")
-        raise HTTPException(status_code=500, detail=f"Batch scan failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Batch scan failed: {str(e)}") from e
 
 
 @app.get("/statistics", dependencies=[Depends(verify_api_key)])
@@ -269,7 +269,7 @@ async def get_statistics(hours: int = 24):
         
     except Exception as e:
         logger.error(f"Error getting statistics: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get statistics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get statistics: {str(e)}") from e
 
 
 @app.get("/recent_scans", dependencies=[Depends(verify_api_key)])
@@ -283,7 +283,7 @@ async def get_recent_scans(limit: int = 100, classification: Optional[str] = Non
         
     except Exception as e:
         logger.error(f"Error getting recent scans: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get recent scans: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get recent scans: {str(e)}") from e
 
 
 @app.get("/trends", dependencies=[Depends(verify_api_key)])
@@ -297,7 +297,7 @@ async def get_trends(hours: int = 24):
         
     except Exception as e:
         logger.error(f"Error getting trends: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get trends: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get trends: {str(e)}") from e
 
 
 if __name__ == "__main__":
