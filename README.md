@@ -35,8 +35,8 @@ graph TD
         
         L1 & L2 & L3 & L4 & L5 & L6 --> L7[Layer 7: Risk Scoring]
         
-        L7 --> |Score 0-80 <br> Ambiguity Band| L8[Layer 8: LLM Classifier]
-        L7 --> |Score > 80 <br> High Risk| Decision
+        L7 --> |Score 5-60 <br> Ambiguity Band| L8[Layer 8: LLM Classifier]
+        L7 --> |Score > 60 <br> High Risk| Decision
         
         L8 --> Decision{Final Decision Engine}
     end

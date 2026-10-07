@@ -5,7 +5,7 @@ Uses a Large Language Model (via Groq or OpenAI) to contextually evaluate
 prompts that are ambiguous for the lower rule-based and ML layers.
 
 Only invoked when the risk score from layers 1-7 falls within a configurable
-ambiguity band (default: 15–60), keeping API costs minimal.
+ambiguity band (default: 5–60), keeping API costs minimal.
 """
 
 import os
@@ -95,7 +95,7 @@ class LLMClassifier:
         self.provider = cfg.get("provider", "groq").lower()
         self.model = cfg.get("model", "llama-3.1-8b-instant")
         self.timeout = cfg.get("timeout", 10)
-        self.ambiguity_low = cfg.get("ambiguity_threshold_low", 15)
+        self.ambiguity_low = cfg.get("ambiguity_threshold_low", 5)
         self.ambiguity_high = cfg.get("ambiguity_threshold_high", 60)
 
         # API key: config takes priority, then environment variable
