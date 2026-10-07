@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 import logging
 import os
 import secrets
+import time
 from contextlib import asynccontextmanager
 from typing import List, Optional
 
@@ -137,6 +138,14 @@ async def lifespan(app: FastAPI):
         f"Active: [{', '.join(active_names)}]. "
         f"Disabled: [{', '.join(disabled_names) if disabled_names else 'None'}]."
     )
+
+    try:
+        t0 = time.perf_counter()
+        scanner.scan("warmup")
+        elapsed_ms = (time.perf_counter() - t0) * 1000
+        logger.info(f"Scanner warm-up completed in {elapsed_ms:.2f}ms")
+    except Exception as e:
+        logger.warning(f"Scanner warm-up failed: {e}")
 
     logger.info("MAPS API ready")
 
