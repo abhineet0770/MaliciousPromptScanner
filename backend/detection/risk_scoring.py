@@ -26,16 +26,16 @@ def _load_yaml_config() -> dict:
 
 @dataclass
 class RiskThresholds:
-    safe_max: int = 20
-    suspicious_max: int = 50
+    safe_max: int = 9
+    suspicious_max: int = 19
 
     @classmethod
     def from_config(cls) -> 'RiskThresholds':
         cfg = _load_yaml_config()
         t = cfg.get('risk_scoring', {}).get('thresholds', {})
         return cls(
-            safe_max=t.get('safe_max', 20),
-            suspicious_max=t.get('suspicious_max', 50)
+            safe_max=t.get('safe_max', 9),
+            suspicious_max=t.get('suspicious_max', 19)
         )
 
     def classify(self, score: int) -> str:

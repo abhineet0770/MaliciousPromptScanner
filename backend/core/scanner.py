@@ -9,6 +9,8 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import yaml
+
 from backend.core.model_utils import is_lfs_pointer
 from backend.detection.keyword_detector import KeywordDetector
 from backend.detection.llm_classifier import LLMClassifier
@@ -20,6 +22,16 @@ from backend.detection.rule_engine import RuleEngine
 from backend.detection.semantic_detector import SemanticDetector
 
 logger = logging.getLogger(__name__)
+
+# Load Config
+_config_path = Path(__file__).parent.parent.parent / "config" / "default_config.yaml"
+try:
+    with open(_config_path, "r", encoding="utf-8") as _f:
+        _config_data = yaml.safe_load(_f)
+except Exception:
+    _config_data = {}
+
+_semantic_config = _config_data.get("semantic_detector", {}) if isinstance(_config_data, dict) else {}
 
 
 class MAPSScanner:
@@ -42,7 +54,17 @@ class MAPSScanner:
         self.keyword_detector = keyword_detector or KeywordDetector()
         self.regex_detector = regex_detector or RegexDetector()
         self.ngram_detector = ngram_detector or NGramDetector()
-        self.semantic_detector = semantic_detector or SemanticDetector()
+        if semantic_detector is not None:
+            self.semantic_detector = semantic_detector
+        else:
+            sem_model_name = _semantic_config.get("model_name", "all-MiniLM-L6-v2")
+            sem_threshold = _semantic_config.get("similarity_threshold", 0.65)
+            sem_device = _semantic_config.get("device", "cpu")
+            self.semantic_detector = SemanticDetector(
+                model_name=sem_model_name,
+                similarity_threshold=sem_threshold,
+                device=sem_device
+            )
 
         # Auto-load trained ML model if the saved files exist
         if ml_classifier is not None:

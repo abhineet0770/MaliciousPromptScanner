@@ -85,14 +85,80 @@ def section(title):
     return f"\n{'=' * 78}\n{title}\n{'=' * 78}"
 
 
+def md_table(headers, rows):
+    out = ["| " + " | ".join(str(h) for h in headers) + " |",
+           "|" + "|".join("---" for _ in headers) + "|"]
+    for r in rows:
+        out.append("| " + " | ".join(str(c) for c in r) + " |")
+    return "\n".join(out)
+
+
+def markdown_report(summary, res, y_true):
+    """GitHub-renderable version of the same findings."""
+    b = summary["BLOCK only"]
+    w = summary["BLOCK or WARN"]
+    md = ["# MAPS Shield — Evaluation Report", "",
+          f"Dataset: {len(res)} prompts "
+          f"({int(y_true.sum())} malicious, {int((1 - y_true).sum())} benign)", "",
+          "## Headline", "",
+          md_table(["Metric", "BLOCK only", "BLOCK or WARN"], [
+              ["Accuracy", f"{b['accuracy']:.3f}", f"{w['accuracy']:.3f}"],
+              ["Precision", f"{b['precision']:.3f}", f"{w['precision']:.3f}"],
+              ["Recall", f"{b['recall']:.3f}", f"{w['recall']:.3f}"],
+              ["F1", f"{b['f1']:.3f}", f"{w['f1']:.3f}"],
+              ["Attacks missed (FN)", b["fn"], w["fn"]],
+              ["Benign blocked (FP)", b["fp"], w["fp"]],
+          ]), "",
+          "## Per-layer performance", "",
+          "Precision here is each layer's reliability input for noisy-OR scoring.", "",
+          md_table(["Layer", "Fired", "Errors", "Precision", "Recall", "F1"],
+                   [[k, v["fires"], v["errors"], f"{v['precision']:.3f}",
+                     f"{v['recall']:.3f}", f"{v['f1']:.3f}"]
+                    for k, v in summary["layers"].items()]), "",
+          "## Per-category accuracy", ""]
+
+    rows = []
+    for (cat, sub), g in res.groupby(["category", "subcategory"], sort=True):
+        n = len(g)
+        blocked = int((g["decision"] == "BLOCK").sum())
+        correct = blocked if g["label"].iloc[0] == 1 else n - blocked
+        rows.append([cat, sub, n, correct, n - correct, f"{correct / n:.0%}",
+                     f"{g['risk_score'].mean():.1f}"])
+    md += [md_table(["Category", "Subcategory", "N", "Correct", "Wrong",
+                     "Accuracy", "Mean score"], rows), "",
+           "## Operational", "",
+           md_table(["Metric", "Value"], [
+               ["Latency p50", f"{summary['latency']['p50']:.1f} ms"],
+               ["Latency p95", f"{summary['latency']['p95']:.1f} ms"],
+               ["Latency p99", f"{summary['latency']['p99']:.1f} ms"],
+               ["LLM invocation rate", f"{summary['llm_invocation_rate']:.1%}"],
+               ["Resolved without API call", f"{1 - summary['llm_invocation_rate']:.1%}"],
+               ["Best-F1 threshold", f"{summary['best_threshold']['threshold']} "
+                                     f"(F1 {summary['best_threshold']['f1']:.3f})"],
+           ]), "",
+           "---", "",
+           "Full detail including every misclassified prompt is in "
+           "`evaluation_report.txt`; per-prompt results in "
+           "`evaluation_predictions.csv`."]
+    return "\n".join(md)
+
+
 # ----------------------------------------------------------------- evaluation
 
-def run(dataset_path, limit=None, out_dir="."):
+def run(dataset_path, limit=None, out_dir=".", verbose=False):
     from backend.core.scanner import MAPSScanner
 
     df = pd.read_csv(dataset_path)
-    if limit:
-        df = df.head(limit)
+    if limit and limit < len(df):
+        # Sample proportionally across categories. Taking head() would slice a
+        # single category and give a wildly unrepresentative picture.
+        if "category" in df.columns:
+            df = (df.groupby("category", group_keys=False)
+                    .apply(lambda g: g.sample(max(1, round(limit * len(g) / len(df))),
+                                              random_state=42))
+                    .reset_index(drop=True))
+        else:
+            df = df.sample(limit, random_state=42).reset_index(drop=True)
     if "category" not in df.columns:
         df["category"] = "uncategorised"
     if "subcategory" not in df.columns:
@@ -305,14 +371,31 @@ def run(dataset_path, limit=None, out_dir="."):
 
     # ---------------------------------------------------- write
     text = "\n".join(report)
-    print(text)
     (out / "evaluation_report.txt").write_text(text, encoding="utf-8")
+    (out / "evaluation_report.md").write_text(markdown_report(summary, res, y_true), encoding="utf-8")
+    if verbose:
+        print(text)
     (out / "evaluation_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
-    print(f"\n\nWritten:")
-    print(f"  {out / 'evaluation_report.txt'}       full report")
-    print(f"  {out / 'evaluation_predictions.csv'}  per-prompt results")
-    print(f"  {out / 'evaluation_summary.json'}     machine-readable summary")
+    # ---------------------------------------------------- console summary
+    b = summary["BLOCK only"]
+    print(f"\n{'-' * 60}")
+    print(f"  Scanned        {len(res)} prompts "
+          f"({int(y_true.sum())} malicious, {int((1 - y_true).sum())} benign)")
+    print(f"  Precision      {b['precision']:.3f}")
+    print(f"  Recall         {b['recall']:.3f}      <- share of attacks caught")
+    print(f"  F1             {b['f1']:.3f}")
+    print(f"  Missed attacks {b['fn']}")
+    print(f"  False blocks   {b['fp']}")
+    print(f"  Latency p50    {summary['latency']['p50']:.1f} ms   p95 {summary['latency']['p95']:.1f} ms")
+    print(f"  LLM invoked    {summary['llm_invocation_rate']:.1%} of prompts")
+    print(f"{'-' * 60}")
+    print("\nReports written:")
+    print(f"  {out / 'evaluation_report.md'}         readable report (renders on GitHub)")
+    print(f"  {out / 'evaluation_report.txt'}        plain-text version")
+    print(f"  {out / 'evaluation_predictions.csv'}   per-prompt results")
+    print(f"  {out / 'evaluation_summary.json'}      machine-readable summary")
+    print("\nRe-run with --verbose to print the full report here as well.")
 
 
 def main():
@@ -320,11 +403,13 @@ def main():
     ap.add_argument("--dataset", default="eval_dataset.csv")
     ap.add_argument("--limit", type=int, default=None, help="only scan the first N rows")
     ap.add_argument("--out", default=".", help="directory for report artefacts")
+    ap.add_argument("--verbose", action="store_true",
+                    help="also print the full report to the terminal (default: files only)")
     args = ap.parse_args()
 
     if not Path(args.dataset).exists():
         sys.exit(f"dataset not found: {args.dataset}")
-    run(args.dataset, args.limit, args.out)
+    run(args.dataset, args.limit, args.out, args.verbose)
 
 
 if __name__ == "__main__":

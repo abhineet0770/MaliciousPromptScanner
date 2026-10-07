@@ -654,9 +654,9 @@ def render_status():
 
         st.subheader("Risk Thresholds")
         thresholds = status.get('risk_thresholds', {})
-        st.write(f"Safe: 0-{thresholds.get('safe_max', 30)}")
-        st.write(f"Suspicious: {thresholds.get('safe_max', 30)+1}-{thresholds.get('suspicious_max', 60)}")
-        st.write(f"Malicious: {thresholds.get('suspicious_max', 60)+1}-100")
+        st.write(f"Safe: 0-{thresholds.get('safe_max', 9)}")
+        st.write(f"Suspicious: {thresholds.get('safe_max', 9)+1}-{thresholds.get('suspicious_max', 19)}")
+        st.write(f"Malicious: {thresholds.get('suspicious_max', 19)+1}-100")
     else:
         st.error("Unable to fetch system status. Is the API running?")
 

@@ -16,10 +16,11 @@ scanner:
 
 # Risk Scoring Configuration
 risk_scoring:
+  # Calibrated tier boundaries from threshold sweep on tests/eval_dataset.csv (F1 0.607 at >=20 block threshold)
   thresholds:
-    safe_max: 20         # Scores 0–20  → SAFE  → ALLOW
-    suspicious_max: 50   # Scores 21–50 → SUSPICIOUS → WARN
-                         # Scores 51+   → MALICIOUS  → BLOCK
+    safe_max: 9          # Scores 0–9   → SAFE  → ALLOW
+    suspicious_max: 19   # Scores 10–19 → SUSPICIOUS → WARN
+                         # Scores 20+   → MALICIOUS  → BLOCK
 
   # Layer weights (these are the actual multipliers applied per layer)
   weights:
@@ -60,8 +61,9 @@ ngram_detector:
 
 # Semantic Detector Configuration
 semantic_detector:
-  model_name: "paraphrase-multilingual-MiniLM-L12-v2"
-  similarity_threshold: 0.65
+  # Calibrated model: threshold 0.50 was calibrated against all-MiniLM-L6-v2
+  model_name: "all-MiniLM-L6-v2"
+  similarity_threshold: 0.50
   device: "cpu"
 
 # ML Classifier Configuration
@@ -78,7 +80,7 @@ ml_classifier:
 llm_classifier:
   enabled: true            # Layer 8 active — key loaded from .env
   provider: "groq"              # "groq" (free, fast) or "openai"
-  model: "llama-3.1-8b-instant"   # Groq model. For OpenAI use: "gpt-4o-mini"
+  model: "openai/gpt-oss-20b" 
   api_key: ""              # Leave blank — set GROQ_API_KEY in your .env file instead
   timeout: 10              # Seconds to wait for LLM response
   weight: 30               # How much Layer 8 contributes to the risk score

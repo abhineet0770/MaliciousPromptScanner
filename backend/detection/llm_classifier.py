@@ -113,20 +113,22 @@ class LLMClassifier:
                 f"Set '{env_key}' in environment or 'api_key' in config."
             )
         else:
-            logger.info("LLM Classifier disabled (set llm_classifier.enabled: true in config to activate).")
+            logger.info(
+                "LLM Classifier disabled (set llm_classifier.enabled: true in config to activate)."
+            )
 
     def _init_client(self):
         """Initialise the API client for the configured provider."""
         try:
             if self.provider == "groq":
                 from groq import Groq
-                self.client = Groq(api_key=self.api_key)
+                self.client = Groq(api_key=self.api_key, timeout=self.timeout)
                 self.available = True
                 logger.info(f"LLM Classifier ready — provider: Groq, model: {self.model}")
 
             elif self.provider == "openai":
                 from openai import OpenAI
-                self.client = OpenAI(api_key=self.api_key)
+                self.client = OpenAI(api_key=self.api_key, timeout=self.timeout)
                 self.available = True
                 logger.info(f"LLM Classifier ready — provider: OpenAI, model: {self.model}")
 
@@ -155,47 +157,78 @@ class LLMClassifier:
             return self._skipped_result("LLM classifier not available")
 
         start = time.time()
+        raw = ""
         try:
             import json as _json
+            import re
+
+            messages = [
+                {"role": "system", "content": self.system_prompt},
+                {"role": "user", "content": f"Classify this prompt:\n\n{prompt}"}
+            ]
 
             if self.provider == "groq":
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {"role": "system", "content": self.system_prompt},
-                        {"role": "user", "content": f"Classify this prompt:\n\n{prompt}"}
-                    ],
-                    temperature=0.1,
-                    max_tokens=200,
-                    timeout=self.timeout
-                )
-                raw = response.choices[0].message.content.strip()
+                kwargs = {
+                    "model": self.model,
+                    "messages": messages,
+                    "temperature": 0.1,
+                    "max_tokens": 1024,
+                    "timeout": self.timeout,
+                    "response_format": {"type": "json_object"},
+                    "reasoning_effort": "low",
+                }
+                try:
+                    response = self.client.chat.completions.create(**kwargs)
+                except Exception as e:
+                    logger.warning(
+                        f"Groq API call with reasoning_effort='low' failed ({e}). "
+                        "Retrying without reasoning_effort."
+                    )
+                    kwargs.pop("reasoning_effort", None)
+                    response = self.client.chat.completions.create(**kwargs)
+
+                raw = response.choices[0].message.content or ""
+                raw = raw.strip()
 
             elif self.provider == "openai":
                 response = self.client.chat.completions.create(
                     model=self.model,
-                    messages=[
-                        {"role": "system", "content": self.system_prompt},
-                        {"role": "user", "content": f"Classify this prompt:\n\n{prompt}"}
-                    ],
+                    messages=messages,
                     temperature=0.1,
-                    max_tokens=200,
+                    max_tokens=1024,
                     timeout=self.timeout,
                     response_format={"type": "json_object"}
                 )
-                raw = response.choices[0].message.content.strip()
+                raw = response.choices[0].message.content or ""
+                raw = raw.strip()
 
             elapsed_ms = round((time.time() - start) * 1000, 2)
 
             # Strip markdown code fences if present
-            if raw.startswith("```"):
-                raw = raw.split("```")[1]
-                if raw.startswith("json"):
-                    raw = raw[4:]
-            raw = raw.strip()
+            cleaned = raw
+            if cleaned.startswith("```"):
+                cleaned = cleaned.split("```")[1]
+                if cleaned.startswith("json"):
+                    cleaned = cleaned[4:]
+            cleaned = cleaned.strip()
 
-            parsed = _json.loads(raw)
-            verdict = parsed.get("verdict", "SAFE").upper()
+            parsed = None
+            try:
+                parsed = _json.loads(cleaned)
+            except Exception:
+                # Attempt to extract the first {...} block from the raw text
+                match = re.search(r"\{[\s\S]*?\}", raw)
+                if match:
+                    try:
+                        parsed = _json.loads(match.group(0))
+                    except Exception:
+                        parsed = None
+
+            if not isinstance(parsed, dict):
+                logger.debug(f"LLM raw response (first 200 chars): {raw[:200]}")
+                raise ValueError("Failed to parse JSON response from LLM")
+
+            verdict = str(parsed.get("verdict", "SAFE")).upper()
             confidence = float(parsed.get("confidence", self.VERDICT_CONFIDENCE.get(verdict, 0.5)))
             attack_type = parsed.get("attack_type", "unknown")
             reason = parsed.get("reason", "No reason provided")

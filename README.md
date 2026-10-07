@@ -63,7 +63,7 @@ graph TD
 | **4** | **Semantic Similarity** | `Sentence-Transformers` embedding distance to known malicious prompt clusters. | 25 pts |
 | **5** | **ML Classifier** | Pre-trained Scikit-Learn Logistic Regression model on adversarial datasets. | 20 pts |
 | **6** | **Rule Engine** | Consensus engine that triggers when multiple weak layers detect anomalies. | 15 pts |
-| **7** | **Risk Scoring** | Aggregates all scores. Prompts scoring `> 60` are generally considered Malicious. | - |
+| **7** | **Risk Scoring** | Aggregates all scores. Prompts scoring `≥ 20` are classified as Malicious (BLOCK). | - |
 | **8** | **LLM Classifier** | Dynamic safety net powered by **Groq/OpenAI** that evaluates ambiguous prompts contextually. | 30 pts |
 
 ---
