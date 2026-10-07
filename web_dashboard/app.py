@@ -30,10 +30,10 @@ _load_dotenv()
 
 # Read API URL and Key from Streamlit Secrets (for cloud) or Environment Variables (for local)
 try:
-    API_BASE_URL = st.secrets.get("MAPS_API_URL", "https://diptansh-maps-api.hf.space")
+    API_BASE_URL = st.secrets.get("MAPS_API_URL", "http://localhost:8000")
     API_KEY = st.secrets.get("MAPS_API_KEY", os.environ.get("MAPS_API_KEY", ""))
 except Exception:
-    API_BASE_URL = os.environ.get("MAPS_API_URL", "https://diptansh-maps-api.hf.space")
+    API_BASE_URL = os.environ.get("MAPS_API_URL", "http://localhost:8000")
     API_KEY = os.environ.get("MAPS_API_KEY", "")
 
 # Clean up the URL just in case '/scan_prompt' or trailing slashes were accidentally included in the secret
