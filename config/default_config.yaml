@@ -93,7 +93,7 @@ api:
   port: 8000
   reload: true
   require_auth: true
-  api_key: "maps-secret-key-2026"
+  # API key is configured via the MAPS_API_KEY environment variable (see .env.example)
 
 # Dashboard Configuration
 dashboard:

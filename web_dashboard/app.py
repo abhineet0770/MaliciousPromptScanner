@@ -15,13 +15,26 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
+def _load_dotenv():
+    """Load .env from project root if it exists."""
+    try:
+        from dotenv import load_dotenv
+        env_path = Path(__file__).parent.parent / ".env"
+        if env_path.exists():
+            load_dotenv(dotenv_path=env_path, override=False)
+    except ImportError:
+        pass
+
+
+_load_dotenv()
+
 # Read API URL and Key from Streamlit Secrets (for cloud) or Environment Variables (for local)
 try:
     API_BASE_URL = st.secrets.get("MAPS_API_URL", "https://diptansh-maps-api.hf.space")
-    API_KEY = st.secrets.get("MAPS_API_KEY", "maps-secret-key-2026")
+    API_KEY = st.secrets.get("MAPS_API_KEY", os.environ.get("MAPS_API_KEY", ""))
 except Exception:
     API_BASE_URL = os.environ.get("MAPS_API_URL", "https://diptansh-maps-api.hf.space")
-    API_KEY = os.environ.get("MAPS_API_KEY", "maps-secret-key-2026")
+    API_KEY = os.environ.get("MAPS_API_KEY", "")
 
 # Clean up the URL just in case '/scan_prompt' or trailing slashes were accidentally included in the secret
 if API_BASE_URL.endswith('/scan_prompt'):

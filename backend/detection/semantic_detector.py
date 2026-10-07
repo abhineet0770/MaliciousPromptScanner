@@ -74,8 +74,26 @@ class SemanticDetector:
                 # Fallback for older versions
                 self.embedding_dim = self.model.get_sentence_embedding_dimension()
             self.attack_examples = attack_examples or self._load_attack_examples()
-            self._compute_attack_embeddings()
             self.use_embeddings = True
+
+            # Check for cached pre-computed embeddings
+            embeddings_path = Path(__file__).parent.parent.parent / "models" / "semantic_embeddings.npy"
+            if embeddings_path.exists():
+                from backend.core.model_utils import is_lfs_pointer
+                if is_lfs_pointer(embeddings_path):
+                    logger.error(
+                        f"Embeddings file '{embeddings_path}' is a Git LFS pointer, not actual model data. "
+                        "Run 'git lfs install && git lfs pull', or regenerate with 'python train_models.py'"
+                    )
+                    self._compute_attack_embeddings()
+                else:
+                    try:
+                        self.load_embeddings(embeddings_path)
+                    except Exception as e:
+                        logger.warning(f"Failed to load cached embeddings: {e}, computing from scratch")
+                        self._compute_attack_embeddings()
+            else:
+                self._compute_attack_embeddings()
         except ImportError:
             logger.warning("sentence-transformers not available, using keyword fallback")
             self.attack_examples = attack_examples or self._load_attack_examples()
@@ -231,10 +249,23 @@ class SemanticDetector:
             np.save(filepath, data)
     
     def load_embeddings(self, filepath: Path):
+        from backend.core.model_utils import is_lfs_pointer
+        if is_lfs_pointer(filepath):
+            logger.error(
+                f"Embeddings file '{filepath}' is a Git LFS pointer, not actual model data. "
+                "Run 'git lfs install && git lfs pull', or regenerate with 'python train_models.py'"
+            )
+            self._compute_attack_embeddings()
+            return
+
         if self.use_embeddings:
-            import numpy as np
-            data = np.load(filepath, allow_pickle=True).item()
-            self.model_name = data['model_name']
-            self.similarity_threshold = data['similarity_threshold']
-            self.attack_examples = data['attack_examples']
-            self.attack_embeddings = np.array(data['attack_embeddings'])
+            try:
+                import numpy as np
+                data = np.load(filepath, allow_pickle=True).item()
+                self.model_name = data.get('model_name', self.model_name)
+                self.similarity_threshold = data.get('similarity_threshold', self.similarity_threshold)
+                self.attack_examples = data.get('attack_examples', self.attack_examples)
+                self.attack_embeddings = np.array(data['attack_embeddings'])
+            except Exception as e:
+                logger.warning(f"Failed to load embeddings from {filepath}: {e}, computing from scratch")
+                self._compute_attack_embeddings()

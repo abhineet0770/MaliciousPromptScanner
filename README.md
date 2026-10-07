@@ -72,27 +72,51 @@ graph TD
 
 ### 1. Installation
 
-Clone the repository and install dependencies:
+Clone the repository, pull the Git LFS model binaries, and install dependencies:
 
 ```bash
 git clone https://github.com/DeeptanshNagar/MaliciousPromptScanner.git
 cd MaliciousPromptScanner
+
+# Required: Pull pre-trained model binaries tracked by Git LFS
+git lfs install
+git lfs pull
+
 pip install -r requirements.txt
 ```
 
+> **Important (Git LFS):** The ML model (`models/ml_model.pkl`, `models/ml_vectorizer.pkl`) and semantic embeddings (`models/semantic_embeddings.npy`) are tracked by Git LFS. If you download the repo as a ZIP or clone without Git LFS, these files will only be 130-byte pointer text files. Skipping this step disables the ML and semantic layers.
+>
+> **No-LFS Alternative:** If Git LFS is not installed on your machine, you can download the transformer models and train the ML classifier locally:
+> ```bash
+> python scripts/download_models.py
+> python train_models.py
+> ```
+
 ### 2. Environment Setup
 
-Copy the example environment file and add your API keys:
+Copy the example environment file:
 
 ```bash
 cp .env.example .env
 ```
-Edit `.env` to include your Groq API key (for Layer 8) and your local MAPS API key.
+
+Generate a secure random API key for MAPS authentication:
+
+```bash
+# Using OpenSSL:
+openssl rand -hex 32
+
+# Or using Python:
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+Edit `.env` to set `MAPS_API_KEY` (required when `require_auth` is enabled in config) and your optional Groq API key (for Layer 8):
 
 ```ini
 # .env
+MAPS_API_KEY="your-generated-secret-key-here"
 GROQ_API_KEY="gsk_your_key_here"
-MAPS_API_KEY="maps-secret-key-2026"
 ```
 
 ### 3. Start the Server & Dashboard
@@ -138,7 +162,7 @@ MAPS provides a fast, RESTful API for integration directly into your AI applicat
 
 ```bash
 curl -X POST "http://localhost:8000/scan_prompt" \
-  -H "X-API-Key: maps-secret-key-2026" \
+  -H "X-API-Key: your-generated-secret-key-here" \
   -H "Content-Type: application/json" \
   -d '{"prompt": "how to destroy a city with nuclear weapons", "detailed": true}'
 ```

@@ -9,6 +9,7 @@ import logging
 from typing import List, Dict, Optional
 from pathlib import Path
 
+from backend.core.model_utils import is_lfs_pointer
 from backend.detection.keyword_detector import KeywordDetector
 from backend.detection.regex_detector import RegexDetector
 from backend.detection.ngram_detector import NGramDetector
@@ -50,8 +51,20 @@ class MAPSScanner:
             _model_path = Path(__file__).parent.parent.parent / "models" / "ml_model.pkl"
             _vec_path   = Path(__file__).parent.parent.parent / "models" / "ml_vectorizer.pkl"
             if _model_path.exists() and _vec_path.exists():
-                logger.info("Loading pre-trained ML classifier from models/")
-                self.ml_classifier = MLClassifier(model_path=_model_path, vectorizer_path=_vec_path)
+                if is_lfs_pointer(_model_path) or is_lfs_pointer(_vec_path):
+                    pointer_files = []
+                    if is_lfs_pointer(_model_path):
+                        pointer_files.append(str(_model_path))
+                    if is_lfs_pointer(_vec_path):
+                        pointer_files.append(str(_vec_path))
+                    logger.error(
+                        f"Model file(s) {', '.join(pointer_files)} are Git LFS pointer files, not real model binaries. "
+                        "Run 'git lfs install && git lfs pull', or regenerate with 'python train_models.py'"
+                    )
+                    self.ml_classifier = MLClassifier()
+                else:
+                    logger.info("Loading pre-trained ML classifier from models/")
+                    self.ml_classifier = MLClassifier(model_path=_model_path, vectorizer_path=_vec_path)
             else:
                 logger.warning("No trained ML model found — ML layer disabled. Run: python train_models.py")
                 self.ml_classifier = MLClassifier()
@@ -67,6 +80,7 @@ class MAPSScanner:
             'semantic_similarity': True,
             'ml_classifier': self.ml_classifier.is_trained,
             'rule_engine': True,
+            'risk_scoring': True,
             'llm_classifier': self.llm_classifier.available
         }
         
@@ -247,12 +261,29 @@ class MAPSScanner:
         model_path = model_dir / 'ml_model.pkl'
         vectorizer_path = model_dir / 'ml_vectorizer.pkl'
         if model_path.exists() and vectorizer_path.exists():
-            self.ml_classifier.load_model(model_path, vectorizer_path)
-            self.enabled_layers['ml_classifier'] = True
+            if is_lfs_pointer(model_path) or is_lfs_pointer(vectorizer_path):
+                pointer_files = []
+                if is_lfs_pointer(model_path):
+                    pointer_files.append(str(model_path))
+                if is_lfs_pointer(vectorizer_path):
+                    pointer_files.append(str(vectorizer_path))
+                logger.error(
+                    f"Model file(s) {', '.join(pointer_files)} are Git LFS pointer files, not real model binaries. "
+                    "Run 'git lfs install && git lfs pull', or regenerate with 'python train_models.py'"
+                )
+            else:
+                self.ml_classifier.load_model(model_path, vectorizer_path)
+                self.enabled_layers['ml_classifier'] = True
         
         embeddings_path = model_dir / 'semantic_embeddings.npy'
         if embeddings_path.exists():
-            self.semantic_detector.load_embeddings(embeddings_path)
+            if is_lfs_pointer(embeddings_path):
+                logger.error(
+                    f"Embeddings file '{embeddings_path}' is a Git LFS pointer, not actual model data. "
+                    "Run 'git lfs install && git lfs pull', or regenerate with 'python train_models.py'"
+                )
+            else:
+                self.semantic_detector.load_embeddings(embeddings_path)
         
         logger.info(f"Loaded models from {model_dir}")
     

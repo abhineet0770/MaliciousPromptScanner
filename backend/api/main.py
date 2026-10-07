@@ -8,6 +8,8 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+import os
+import secrets
 import logging
 from typing import List, Optional
 from contextlib import asynccontextmanager
@@ -18,6 +20,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+def _load_dotenv():
+    """Load .env from project root if it exists."""
+    try:
+        from dotenv import load_dotenv
+        env_path = Path(__file__).parent.parent.parent / ".env"
+        if env_path.exists():
+            load_dotenv(dotenv_path=env_path, override=False)
+            logger.debug(".env loaded successfully")
+    except Exception:
+        pass  # python-dotenv missing or .env unreadable -- rely on system environment variables
+
+
+# Load .env when this module is imported
+_load_dotenv()
+
 # Load Config
 config_path = Path(__file__).parent.parent.parent / "config" / "default_config.yaml"
 try:
@@ -26,23 +47,29 @@ try:
 except Exception:
     config_data = {}
 
-api_config = config_data.get("api", {})
+api_config = config_data.get("api", {}) if isinstance(config_data, dict) else {}
 REQUIRE_AUTH = api_config.get("require_auth", False)
-API_KEY = api_config.get("api_key", "maps-secret-key-2026")
+API_KEY = os.environ.get("MAPS_API_KEY") or api_config.get("api_key") or None
+
+if REQUIRE_AUTH and not API_KEY:
+    raise RuntimeError(
+        "MAPS API authentication is enabled (require_auth=True), but no API key was found. "
+        "Set the MAPS_API_KEY environment variable, or add it to a .env file in the project root. "
+        "Generate one with: openssl rand -hex 32"
+    )
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
+
 async def verify_api_key(api_key: str = Security(api_key_header)):
     if REQUIRE_AUTH:
-        if api_key != API_KEY:
+        if not api_key or not API_KEY or not secrets.compare_digest(api_key, API_KEY):
             raise HTTPException(status_code=403, detail="Invalid API Key")
     return api_key
 
+
 from backend.core.scanner import MAPSScanner
 from backend.logging.logger import MAPSLogger
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 scanner: Optional[MAPSScanner] = None
 maps_logger: Optional[MAPSLogger] = None
@@ -87,7 +114,29 @@ async def lifespan(app: FastAPI):
     log_dir = Path(__file__).parent.parent / "logging"
     log_dir.mkdir(exist_ok=True)
     maps_logger = MAPSLogger(db_path=log_dir / "maps_logs.db")
-    
+
+    # Startup self-check: log status of all 8 detection layers
+    layers_status = {
+        "Layer 1 (Keyword Detection)": scanner.enabled_layers.get("keyword_detection", False),
+        "Layer 2 (Regex Detection)": scanner.enabled_layers.get("regex_detection", False),
+        "Layer 3 (N-Gram Detection)": scanner.enabled_layers.get("ngram_detection", False),
+        "Layer 4 (Semantic Similarity)": scanner.enabled_layers.get("semantic_similarity", False),
+        "Layer 5 (ML Classifier)": scanner.enabled_layers.get("ml_classifier", False),
+        "Layer 6 (Rule Engine)": scanner.enabled_layers.get("rule_engine", False),
+        "Layer 7 (Risk Scoring)": scanner.enabled_layers.get("risk_scoring", True),
+        "Layer 8 (LLM Classifier)": scanner.enabled_layers.get("llm_classifier", False),
+    }
+    active_count = sum(1 for active in layers_status.values() if active)
+    total_count = len(layers_status)
+    active_names = [name for name, active in layers_status.items() if active]
+    disabled_names = [name for name, active in layers_status.items() if not active]
+
+    logger.warning(
+        f"Detection Layers: {active_count} of {total_count} layers active. "
+        f"Active: [{', '.join(active_names)}]. "
+        f"Disabled: [{', '.join(disabled_names) if disabled_names else 'None'}]."
+    )
+
     logger.info("MAPS API ready")
     
     yield
@@ -169,7 +218,7 @@ async def scan_prompt(request: ScanRequest, background_tasks: BackgroundTasks):
     
     try:
         result = scanner.scan(request.prompt, detailed=request.detailed)
-        result = _sanitize(result)   # ← strip any numpy types before Pydantic touches it
+        result = _sanitize(result)   # <- strip any numpy types before Pydantic touches it
         
         if maps_logger and result.get('should_log'):
             background_tasks.add_task(maps_logger.log_scan, result)
