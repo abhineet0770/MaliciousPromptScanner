@@ -17,6 +17,8 @@ import plotly.graph_objects as go
 import requests
 import streamlit as st
 
+st.set_page_config(page_title="MAPS Security", page_icon="🛡️", layout="wide", initial_sidebar_state="expanded")
+
 
 def _load_dotenv():
     """Load .env from project root if it exists."""
@@ -31,13 +33,18 @@ def _load_dotenv():
 
 _load_dotenv()
 
-# Read API URL and Key from Streamlit Secrets (for cloud) or Environment Variables (for local)
-try:
-    API_BASE_URL = st.secrets.get("MAPS_API_URL", "http://localhost:8000")
-    API_KEY = st.secrets.get("MAPS_API_KEY", os.environ.get("MAPS_API_KEY", ""))
-except Exception:
-    API_BASE_URL = os.environ.get("MAPS_API_URL", "http://localhost:8000")
-    API_KEY = os.environ.get("MAPS_API_KEY", "")
+
+def _from_secrets(key: str):
+    """Safely fetch a key from st.secrets without raising when secrets.toml is missing."""
+    try:
+        return st.secrets.get(key)
+    except Exception:
+        return None
+
+
+# Read API URL and Key from Environment Variables (for local/docker) or Streamlit Secrets (for cloud)
+API_BASE_URL = os.environ.get("MAPS_API_URL") or _from_secrets("MAPS_API_URL") or "http://localhost:8000"
+API_KEY = os.environ.get("MAPS_API_KEY") or _from_secrets("MAPS_API_KEY") or ""
 
 # Clean up the URL just in case '/scan_prompt' or trailing slashes were accidentally included in the secret
 if API_BASE_URL.endswith('/scan_prompt'):
@@ -662,7 +669,6 @@ def render_status():
 
 
 def main():
-    st.set_page_config(page_title="MAPS Security", page_icon="🛡️", layout="wide", initial_sidebar_state="expanded")
     inject_custom_css()
 
     st.sidebar.title("MAPS")
